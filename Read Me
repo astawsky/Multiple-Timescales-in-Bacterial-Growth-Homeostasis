@@ -1,0 +1,104 @@
+
+
+It is recommended to first download all of the modules specified in the requirements.txt file in order to run the code.
+
+
+Description of the folders and files:
+
+Analysis code
+    a. global_variables.py --> Contains several global variables and functions used throughout the other python files
+    like the names of the experiments, phenotypic variables and extracting conditional ensembles as explained in the paper.
+
+    b. process_rawdata.py --> Converts the length per time measurements for many experiments into dataframes with
+    phenotypic variables per cycle (single-cell).
+
+    c. reorder_wang_files.py --> In our analysis we need each filename to be different. In the data from
+    Wang et al 2010, the folder structure is so that there are repeating names. This script copies them into our
+    "Datasets" folder and renames them to fit with our processing method by specifying their strain and experiment.
+
+
+AttractorManifold
+    The 3D r=1 attractor figure in inter-division time, growth rate and division ratio axes.
+
+
+ConditionedVariance
+    This folder contains the code used to plot the Conditioned Variance figure in the main text.
+
+
+ConditionedVarianceSupp
+    This folder contains the code used to plot the Conditioned Variance figure in the supplementary text, conditioning
+    on experiment as well as microenvironment.
+
+
+CovarianceDecomposition
+    The pyramids that depict the pooled, long and short correlations of main variables in its entries.
+
+
+Datasets
+    This folder contains the raw and processed data from each experiment we looked at.
+
+    a. raw_data_all_in_one.csv --> A dataframe that contains the length per unit-time measurements for all lineages.
+
+    b. RawData --> Contains the length per unit-time measurements for each lineage in a different file.
+
+    c. ProcessedData/physical_units.csv --> Contains the phenotypic variable values of each bacteria measured in
+    physical units.
+
+    d. ProcessedData/time_averages.csv --> Contains the (lineage-specific) time averages for all phenotypic variables
+    of each bacteria measured.
+
+    e. ProcessedData/trace_centered.csv --> Contains the lineage-centered phenotypic variables values
+    of each bacteria measured.
+
+    f. ProcessedData/z_score_under_3/(physical_units/time-averages/trace_centered)_without_outliers.csv --> Contains the
+    corresponding dataframe with all lineage-specific outliers of each variable represented as np.nan. An outlier is
+    defined as being at least 3 standard deviations away from the mean.
+
+
+HistogramGenerationsPerLineage
+    Plots a histogram depicting the distribution of generations per linege, ie. "lineage length".
+
+
+IntergenerationalCorrelations
+    Creates a dataframe and a figure of pooled correlations of all instances of intergenerationally distant bacteria.
+
+
+MicroenvironmentAverageBehavior
+    The figure in the main text that shows evidence for microenvironmental effects as well as the average behaviors of
+    certain phenotypic variables for artificial and trace lineages.
+
+
+PersistenceMainText
+    Create dataframes that contain the DFA analysis as well as their corresponding figures.
+
+
+PersistenceSupp
+    Create the supplementary figure of the scaling coefficient per experiment group.
+
+
+SizeVariablesAverageBehavior
+    Creates the figure of the average behavior of initial size, division size, added length, and fold growth
+
+
+TablesSupp
+    Creates the supplementary tables that contain growth conditions, lineage statistics and coefficients of variation
+    for all phenotypic variables.
+
+
+TimescaleCorrelations
+    This folder contains the code used to create the big scatterplot figure of long and short timescale correlations as
+    defined in the paper.
+
+
+TrendForDFA
+    Code that creates an figure illustrating the long timescale trend of phenotypic values of a lineage.
+
+
+PairTimescaleCorrelations
+    This folder contains the code used to create the big scatterplot figure of long and short timescale correlations
+    between neighbor lineages.
+
+
+
+To replicate our results first run process_rawdata.py in the folder Analysis code and then run the rest of the code in
+the rest of the folders except for Datasets, which contain the data itself and no code.
