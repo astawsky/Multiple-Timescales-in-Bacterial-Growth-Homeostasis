@@ -8,20 +8,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from scipy.stats import linregress, pearsonr
+import matplotlib.patches as mpatches
 
 
-def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, marker='x'):
+def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, type_of_lineage, marker='x'):
     if pooled:
         for exp, c in zip(time_average.experiment.unique(), cmap):
             # lineages = df[(df['experiment'] == exp)].lineage_ID.unique()
             ax.scatter(time_average.sort_values('lineage_ID')[var1],  # So they don't overlap too much
                        time_average.sort_values('lineage_ID')[var2],  # [df[(df['experiment'] == exp) & (df['lineage_ID'] == lin_id)][var2].mean() for lin_id in lineages[:min(len(lineages), 50)]]
-                       marker=marker, zorder=500, label=exp.split('(')[0] if marker == 'x' else '', alpha=.2)
+                       marker=marker, zorder=500, label=exp.split('(')[0] if type_of_lineage == 'Trace' else '', alpha=.2 if type_of_lineage == 'Trace' else .1)
     else:
         first = time_average.sort_values('lineage_ID')[var1]  # [df[df['lineage_ID'] == lin_id][var1].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
         second = time_average.sort_values('lineage_ID')[var2]  # [df[df['lineage_ID'] == lin_id][var2].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
-        ax.scatter(first, second, marker=marker, c=cmap[0] if marker == 'x' else cmap[1], zorder=500, alpha=.2,
-                   label='Trace' if marker == 'x' else 'Artificial')
+        ax.scatter(first, second, marker=marker, c=cmap[0] if type_of_lineage == 'Trace' else cmap[1], zorder=500, alpha=.2 if type_of_lineage == 'Trace' else .1,
+                   label=type_of_lineage)
         print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if marker == 'x'
               else f'Artificial averages correlation: {pearsonr(first, second)[0]}')
 
@@ -53,16 +54,16 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
     
     print(len(df))
     
-    # To speed it up we sample randomly 1,000 points
-    # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
-    add_scatterplot_of_averages(var1, var2, pooled, df, ax, marker='x')  # Put the average behavior
-    
     if isinstance(artificial, pd.DataFrame):  # If artificial lineages is a dataframe, plot those too
         artificial = artificial[artificial['max_gen'] > 7].copy().reset_index(drop=True)  # Take out extra small lineages
-        add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, marker='^')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
+        add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, 'Artificial', marker='^')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
         
         no_nans_art = artificial[[var1, var2]].copy().dropna()  # drop the NaNs
         print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
+    
+    # To speed it up we sample randomly 1,000 points
+    # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    add_scatterplot_of_averages(var1, var2, pooled, df, ax, 'Trace', marker='x')  # Put the average behavior
     
     if len(line_func) == 0:  # if we didn't put any
         pass
@@ -210,6 +211,10 @@ kde_scatterplot_variables(
     artificial=art_changed_ta,
     sym2=r'$e^{\phi}$'
 )
+
+handles = [mpatches.Patch(color=cmap[0], label='Trace'), mpatches.Patch(color=cmap[1], label='Artificial')]
+_, labels = axes[0, 2].get_legend_handles_labels()
+axes[0, 2].legend(handles, labels, fontsize='xx-small', markerscale=.5)
 
 plot_pair_scatterplots(pu, 'generationtime', 'generationtime', axes[0, 1])
 plot_pair_scatterplots(pu, 'growth_rate', 'growth_rate', axes[0, 0])

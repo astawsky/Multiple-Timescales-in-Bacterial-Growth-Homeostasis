@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from scipy.stats import linregress, pearsonr
+import matplotlib.patches as mpatches
 
 
 def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, marker='x'):
@@ -51,16 +52,16 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
 
     df = df[df['max_gen'] > 15].copy().reset_index(drop=True)  # Take out extra small lineages
     
-    # To speed it up we sample randomly 1,000 points
-    # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
-    add_scatterplot_of_averages(var1, var2, pooled, df, ax, marker='x')  # Put the average behavior
-    
     if isinstance(artificial, pd.DataFrame):  # If artificial lineages is a dataframe, plot those too
         artificial = artificial[artificial['max_gen'] > 7].copy().reset_index(drop=True)  # Take out extra small lineages
         add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, marker='^')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
         
         no_nans_art = artificial[[var1, var2]].copy().dropna()  # drop the NaNs
         print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
+    
+    # To speed it up we sample randomly 1,000 points
+    # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    add_scatterplot_of_averages(var1, var2, pooled, df, ax, marker='x')  # Put the average behavior
     
     if len(line_func) == 0:  # if we didn't put any
         pass
@@ -217,6 +218,10 @@ kde_scatterplot_variables(
     artificial=art,
     sym2=r'$e^{\phi}$'
 )
+
+handles = [mpatches.Patch(color=cmap[0], label='Trace'), mpatches.Patch(color=cmap[1], label='Artificial')]
+_, labels = axes[0].get_legend_handles_labels()
+axes[0].legend(handles, labels, fontsize='xx-small', markerscale=.5)
 
 # plt.legend()
 plt.savefig('size_variables.png', dpi=300)

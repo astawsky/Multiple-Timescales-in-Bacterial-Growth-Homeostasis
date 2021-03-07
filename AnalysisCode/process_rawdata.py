@@ -936,9 +936,7 @@ class SM:
 
 
 """ Create the csv files for physical, trace-centered, and trap-centered units for MM and SM data """
-for data_origin in dataset_names:  # For all the experiments process the raw data
-    if data_origin in sm_datasets:
-        continue
+for data_origin in ['Pooled_SM']:  #dataset_names:  # For all the experiments process the raw data
     print(data_origin)
     
     """
