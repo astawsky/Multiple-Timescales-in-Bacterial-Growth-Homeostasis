@@ -936,7 +936,7 @@ class SM:
 
 
 """ Create the csv files for physical, trace-centered, and trap-centered units for MM and SM data """
-for data_origin in ['Pooled_SM']:  #dataset_names:  # For all the experiments process the raw data
+for data_origin in dataset_names:  # For all the experiments process the raw data
     print(data_origin)
     
     """
@@ -957,12 +957,12 @@ for data_origin in ['Pooled_SM']:  #dataset_names:  # For all the experiments pr
     # Make sure the folders where we place the data are created already
     create_folder(arguments['processed_data'])
     
-    # check_the_division(arguments)  # Optional to see the fits over the raw data.
-    
     if data_origin in sm_datasets:  # Get SM data
         SM(arguments)
     else:  # Get MM data
         MM(arguments)
+    
+    # check_the_division(arguments)  # Optional to see the fits over the raw data.
     
     if arguments['check']:
         print('*' * 200)

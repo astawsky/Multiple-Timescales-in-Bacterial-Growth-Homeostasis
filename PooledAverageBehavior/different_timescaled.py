@@ -26,7 +26,7 @@ def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, marker='x'
         print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if marker == 'x'
               else f'Artificial averages correlation: {pearsonr(first, second)[0]}')
         slope, intercept = linregress(first, second)[:2]
-        ax.plot(first, intercept + slope * first, c=cmap[0] if marker == 'x' else cmap[1])
+        ax.plot(first, intercept + slope * first, c='blue', ls='-')
 
 
 def plot_binned_data(df, var1, var2, num, ax):
@@ -100,6 +100,10 @@ def plots_physical_units(df, var1, var2, num, ax, line_func=[], line_label='', p
     df = df[df['max_gen'] > 15].copy().reset_index(drop=True)  # Take out extra small lineages
     pu = pu[pu['lineage_ID'].isin(df['lineage_ID'].unique())].copy().reset_index(drop=True)  # Take out extra small lineages
     
+    pool = pu[[var1, var2]].dropna().reset_index()
+    
+    print(f'Pooled correlation {var1} {var2}: {pearsonr(pool[var1].values, pool[var2].values)[0]}')
+    
     # To speed it up we sample randomly 1,000 points
     sns.scatterplot(data=pu.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax, edgecolor=None)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
     # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
@@ -133,12 +137,16 @@ def plots_physical_units(df, var1, var2, num, ax, line_func=[], line_label='', p
 def plots_trace_centered(df, var1, var2, num, ax, line_func=[], line_label='', pooled=False, artificial=None, sym1=None, sym2=None, pu=None):  # df is pu of ONE experiment
     # The symbols for each variable
     if sym1 == None:
-        sym1 = symbols['physical_units'][var1]  # if var1 != 'division_ratio' else r'$\ln(f)$'
+        sym1 = symbols['trace_centered'][var1]  # if var1 != 'division_ratio' else r'$\ln(f)$'
     if sym2 == None:
-        sym2 = symbols['physical_units'][var2]
+        sym2 = symbols['trace_centered'][var2]
     
     df = df[df['max_gen'] > 15].copy().reset_index(drop=True)  # Take out extra small lineages
     pu = pu[pu['lineage_ID'].isin(df['lineage_ID'].unique())].copy().reset_index(drop=True)  # Take out extra small lineages
+    
+    pool = pu[[var1, var2]].dropna().reset_index()
+    
+    print(f'Pooled correlation {var1} {var2}: {pearsonr(pool[var1].values, pool[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
     sns.scatterplot(data=pu.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax, edgecolor=None)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
@@ -238,7 +246,9 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
 
 
 pu = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+pu.loc[:, phenotypic_variables] = pu[np.abs(pu[phenotypic_variables] - pu[phenotypic_variables].mean()) < 4*pu[phenotypic_variables].std()].reset_index()
 tc = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/trace_centered_without_outliers.csv')
+tc.loc[:, phenotypic_variables] = tc[np.abs(tc[phenotypic_variables] - tc[phenotypic_variables].mean()) < 4*tc[phenotypic_variables].std()].reset_index()
 ta = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/time_averages_without_outliers.csv').drop('generation', axis=1).drop_duplicates()
 ta['fold_growth'] = np.exp(ta['fold_growth'])
 art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates()
@@ -251,7 +261,7 @@ scale = 1
 sns.set_context('paper', font_scale=1 * scale)
 sns.set_style("ticks", {'axes.grid': False})
 
-fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[8 * scale, 6.5 * scale])
+fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[9 * scale, 6.5 * scale])
 
 axes[0, 0].set_title('A', x=-.2, fontsize='xx-large')
 axes[0, 1].set_title('B', x=-.2, fontsize='xx-large')
@@ -344,10 +354,10 @@ plots_trace_centered(
 )
 
 # handles = [mpatches.Patch(color=cmap[0], label='Trace'), mpatches.Patch(color=cmap[1], label='Artificial')]
-handles, labels = axes[0, 0].get_legend_handles_labels()
-axes[0, 0].legend(handles, labels, fontsize='xx-small', markerscale=.5)
+# handles, labels = axes[0, 0].get_legend_handles_labels()
+# axes[0, 0].legend(handles, labels, markerscale=.5)
 
 # plt.legend()
-# plt.savefig('size_variables.png', dpi=300)
+plt.savefig('average_vs_pooled_behavior.png', dpi=300)
 plt.show()
 plt.close()

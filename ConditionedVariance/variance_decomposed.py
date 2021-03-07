@@ -317,5 +317,5 @@ axes[0].set_xlabel(r'time $($hr$)$')
 mm_traps(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[1])
 vd_with_trap_and_lineage(phenotypic_variables, lin_type='NL', ax=axes[2])
 plt.tight_layout()
-plt.show()
+plt.show()  # has to be manually adjusted to some degree
 plt.close()

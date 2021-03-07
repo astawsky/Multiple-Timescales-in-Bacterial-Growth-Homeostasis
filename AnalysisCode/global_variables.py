@@ -554,7 +554,7 @@ def check_the_division(args, lineages=[], raw_lineages=[], raw_indices=[], pu=[]
         start_indices = ri[ri['type'] == 'start']['value'].values.copy()
         end_indices = ri[ri['type'] == 'end']['value'].values.copy()
         
-        ax.plot(rl['time'].values, rl['length'].values)
+        ax.plot(rl['time'].values, rl['length'].values, marker='o')
         if len(non_positives) > 0:
             ax.scatter(rl['time'].iloc[non_positives].values, rl['length'].iloc[non_positives].values, label='non_positives', marker='o')
         if len(singularities) > 0:
@@ -571,8 +571,8 @@ def check_the_division(args, lineages=[], raw_lineages=[], raw_indices=[], pu=[]
             
             ax.plot(rl['time'].iloc[int(start):int(start) + len(line)], line, color='orange', ls='--')
         
-        ax.scatter(rl['time'].iloc[start_indices].values, rl['length'].iloc[start_indices].values, color='green', label='start indices')
-        ax.scatter(rl['time'].iloc[end_indices].values, rl['length'].iloc[end_indices].values, color='red', label='end indices')
+        # ax.scatter(rl['time'].iloc[start_indices].values, rl['length'].iloc[start_indices].values, color='green', label='start indices')
+        # ax.scatter(rl['time'].iloc[end_indices].values, rl['length'].iloc[end_indices].values, color='red', label='end indices')
         
         if plot_it:
             ax.set_yscale('log')

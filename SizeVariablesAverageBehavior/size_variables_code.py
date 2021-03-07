@@ -219,7 +219,7 @@ kde_scatterplot_variables(
     sym2=r'$e^{\phi}$'
 )
 
-handles = [mpatches.Patch(color=cmap[0], label='Trace'), mpatches.Patch(color=cmap[1], label='Artificial')]
+handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
 _, labels = axes[0].get_legend_handles_labels()
 axes[0].legend(handles, labels, fontsize='xx-small', markerscale=.5)
 
