@@ -11,19 +11,19 @@ from scipy.stats import linregress, pearsonr
 import matplotlib.patches as mpatches
 
 
-def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, marker='x'):
+def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, type_of_lineage, marker='o'):
     if pooled:
         for exp, c in zip(time_average.experiment.unique(), cmap):
             # lineages = df[(df['experiment'] == exp)].lineage_ID.unique()
             ax.scatter(time_average.sort_values('lineage_ID')[var1],  # So they don't overlap too much
                        time_average.sort_values('lineage_ID')[var2],  # [df[(df['experiment'] == exp) & (df['lineage_ID'] == lin_id)][var2].mean() for lin_id in lineages[:min(len(lineages), 50)]]
-                       marker=marker, zorder=500, label=exp.split('(')[0] if marker == 'x' else '', alpha=.2)
+                       marker=marker, zorder=500, label=exp.split('(')[0] if type_of_lineage == 'Trace' else '', alpha=.6)
     else:
         first = time_average.sort_values('lineage_ID')[var1]  # [df[df['lineage_ID'] == lin_id][var1].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
         second = time_average.sort_values('lineage_ID')[var2]  # [df[df['lineage_ID'] == lin_id][var2].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
-        ax.scatter(first, second, marker=marker, c=cmap[0] if marker == 'x' else cmap[1], zorder=500, alpha=.2,
-                   label='Trace' if marker == 'x' else 'Artificial')
-        print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if marker == 'x'
+        ax.scatter(first, second, marker=marker, c=cmap[0] if type_of_lineage == 'Trace' else cmap[1], zorder=500, alpha=.6,
+                   label='Trace' if type_of_lineage == 'Trace' else 'Artificial')
+        print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if type_of_lineage == 'Trace'
               else f'Artificial averages correlation: {pearsonr(first, second)[0]}')
 
 
@@ -54,14 +54,14 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
     
     if isinstance(artificial, pd.DataFrame):  # If artificial lineages is a dataframe, plot those too
         artificial = artificial[artificial['max_gen'] > 7].copy().reset_index(drop=True)  # Take out extra small lineages
-        add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, marker='^')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
+        add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, type_of_lineage='Artificial')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
         
         no_nans_art = artificial[[var1, var2]].copy().dropna()  # drop the NaNs
         print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
     # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
-    add_scatterplot_of_averages(var1, var2, pooled, df, ax, marker='x')  # Put the average behavior
+    add_scatterplot_of_averages(var1, var2, pooled, df, ax, type_of_lineage='Trace')  # Put the average behavior
     
     if len(line_func) == 0:  # if we didn't put any
         pass
@@ -69,11 +69,11 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
         x, y = df[[var1, var2]].dropna()[var1].values, df[[var1, var2]].dropna()[var2].values
         slope, intercept = linregress(x, y)[:2]
         fake_x = np.linspace(np.nanmin(x), np.nanmax(x))
-        ax.plot(fake_x, intercept + slope * fake_x, color='black', ls='--', label=f'{sym2}={np.round(intercept, 2)}+{np.round(slope, 2)}*{sym1}')
+        ax.plot(fake_x, intercept + slope * fake_x, color='black', ls='--', label=f'{sym2}={np.round(intercept, 2)}+{np.round(slope, 2)}*{sym1}', zorder=1000)
     else:  # Plot using the other functions for the min and max in the x distribution
         for count, func in enumerate(line_func):
             fake_x = np.linspace(np.nanmin(df[var1].values), np.nanmax(df[var1].values))  # x linespace
-            ax.plot(fake_x, func(fake_x), color='black' if count == 0 else 'gray', ls='--', label=line_label)  # plot the x distribution
+            ax.plot(fake_x, func(fake_x), color='black' if count == 0 else 'gray', ls='--', label=line_label, zorder=1000)  # plot the x distribution
     
     # plt.title(ds)
     # plot_binned_data(df, var1, var2, num, ax)  # plot the binned data
@@ -219,9 +219,9 @@ kde_scatterplot_variables(
     sym2=r'$e^{\phi}$'
 )
 
-handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
-_, labels = axes[0].get_legend_handles_labels()
-axes[0].legend(handles, labels, fontsize='xx-small', markerscale=.5)
+# handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
+handles, labels = axes[0].get_legend_handles_labels()
+axes[0].legend(handles, labels, fontsize='small')  # , markerscale=.5
 
 # plt.legend()
 plt.savefig('size_variables.png', dpi=300)
