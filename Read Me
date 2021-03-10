@@ -22,7 +22,8 @@ AttractorManifold
 
 
 ConditionedVariance
-    This folder contains the code used to plot the Conditioned Variance figure in the main text.
+    This folder contains the code used to plot the Conditioned Variance figure in the main text and the Supplementary
+    figure using Tanouchi 2015 data grown in 25, 27 and 37 degrees.
 
 
 ConditionedVarianceSupp

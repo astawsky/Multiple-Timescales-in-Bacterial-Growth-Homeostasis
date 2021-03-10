@@ -114,7 +114,7 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
     y_b = np.array(y_b)
     
     ax.grid(True)
-    ax.scatter(x_a, y_b)
+    ax.scatter(x_a, y_b, alpha=.6)
     
     diag_spead = np.std((x_a + y_b) / 2)
     off_spread = np.std((np.append((x_a - np.sqrt(x_a * y_b)), (y_b - np.sqrt(x_a * y_b)))))

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, phenotypic_variables, cmap, shuffle_info, check_the_division
+    symbols, phenotypic_variables, cmap, shuffle_info, check_the_division, tanouchi_datasets
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -314,8 +314,21 @@ cell_cycle_illustration(axes[0])
 axes[0].set_ylabel(r'length $(\mu$m$)$')
 axes[0].set_xlabel(r'time $($hr$)$')
 
+# For the experiments that are in the main text
 mm_traps(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[1])
 vd_with_trap_and_lineage(phenotypic_variables, lin_type='NL', ax=axes[2])
+
+# # For experiments that were not in the main text to show consistency
+# mm_traps([tanouchi_datasets[0]], ax=axes[0])
+# mm_traps([tanouchi_datasets[1]], ax=axes[1])
+# mm_traps([tanouchi_datasets[2]], ax=axes[2])
+# for ax in axes:
+#     ax.set_ylim([0, .08])
+# axes[1].set_ylabel('')
+# axes[2].set_ylabel('')
+# axes[1].get_legend().remove()
+# axes[2].get_legend().remove()
+
 plt.tight_layout()
 plt.show()  # has to be manually adjusted to some degree
 plt.close()

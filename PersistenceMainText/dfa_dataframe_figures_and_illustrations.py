@@ -464,7 +464,7 @@ def plot_loglog_lines(loglog_plot_recreation, ax):
 def plot_dfa_slopes(ax):
     se = pd.DataFrame()
     
-    for ds in dataset_names:
+    for ds in ['Pooled_SM', 'Maryam_LongTraces', 'Lambda_LB', 'MG1655_inLB_LongTraces']:#dataset_names:
         # if ds != 'Pooled_SM':
         #     continue
         print(ds)
@@ -532,6 +532,6 @@ axes[2].set_title('C', x=-.18, fontsize='xx-large')
 plot_dfa_cumsum_illustration(axes[0])
 plot_loglog_lines(recreation[recreation['kind'] == 'dfa (short)'], axes[1])
 plot_dfa_slopes(axes[2])
-plt.savefig('dfa figure updated.png', dpi=500)
+plt.savefig('dfa_figure_Hanna_data.png', dpi=500)
 # plt.show()
 plt.close()

@@ -947,7 +947,7 @@ for data_origin in dataset_names:  # For all the experiments process the raw dat
     without_outliers ==> The path to save all the dataframes with (pooled ensemble) outliers taken out 
     """
     arguments = {
-        'check': False,
+        'check': True,
         'data_origin': data_origin,
         'raw_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/RawData/',
         'processed_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/',

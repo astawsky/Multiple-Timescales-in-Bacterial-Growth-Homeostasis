@@ -212,12 +212,12 @@ art['fold_growth'] = np.exp(art['fold_growth'])
 
 num = 10
 
-scale = 1
+scale = 1.5
 
 sns.set_context('paper', font_scale=1 * scale)
 sns.set_style("ticks", {'axes.grid': False})
 
-fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[9 * scale, 6.5 * scale])
+fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[6.5 * scale, 4.2 * scale])
 
 axes[0, 0].set_title('A', x=-.2, fontsize='xx-large')
 axes[0, 1].set_title('B', x=-.2, fontsize='xx-large')
