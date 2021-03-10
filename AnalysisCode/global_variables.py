@@ -29,7 +29,6 @@ def get_time_averages_df(info, phenotypic_variables):  # MM
     
     # specify a lineage
     for lin_id in info['lineage_ID'].unique():
-        # print(lin_id)
         
         # the values of the lineage we get from physical units
         lineage = info[(info['lineage_ID'] == lin_id)].copy()

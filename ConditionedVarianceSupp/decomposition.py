@@ -370,14 +370,14 @@ fig, axes = plt.subplots(1, 2, figsize=[6.5 * scale, 3.5 * scale], tight_layout=
 axes[0].set_title('A', x=-.2, fontsize='xx-large')
 axes[1].set_title('B', x=-.05, fontsize='xx-large')
 
-# For experiments that were not in the main text to show consistency
-mm_lineage_experiment(cgsc_6300_wang_exps, ax=axes[0])
-mm_lineage_experiment(lexA3_wang_exps, ax=axes[1])
-# axes[1].set_yticklabels('')
+# # For experiments that were not in the main text to show consistency
+# mm_lineage_experiment(cgsc_6300_wang_exps, ax=axes[0])
+# mm_lineage_experiment(lexA3_wang_exps, ax=axes[1])
+# axes[1].get_legend().remove()  # Repetative
 
-# # For the MM and SM experiments in the main text
-# mm_lineage_experiment(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[0])
-# vd_with_trap_lineage_and_experiments(sm_datasets, phenotypic_variables, lin_type='NL', ax=axes[1])
+# For the MM and SM experiments in the main text
+mm_lineage_experiment(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[0])
+vd_with_trap_lineage_and_experiments(sm_datasets, phenotypic_variables, lin_type='NL', ax=axes[1])
 
 axes[1].set_yticklabels('')
 axes[1].set_ylabel('')
