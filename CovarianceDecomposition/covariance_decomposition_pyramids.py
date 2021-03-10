@@ -33,7 +33,6 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
                 delta = []
                 line = []
                 
-                
                 for lin_id in phys.lineage_ID.unique():
                     l_cond = (phys['lineage_ID'] == lin_id)  # Condition that they are in the same experiment and lineage
                     lin = phys[l_cond].copy()[[param_1, param_2]].dropna().reset_index(drop=True)  # The masked dataframe that contains bacteria in the same lineage and experiment
