@@ -43,12 +43,12 @@ def plot_binned_data(df, var1, var2, num, ax):
     ax.plot(x_binned, y_binned, marker='s', label='binned', zorder=1000, alpha=.6, c='k')
 
 
-def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label='', pooled=False, artificial=None, sym1=None, sym2=None):  # df is pu of ONE experiment
+def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label='', pooled=False, artificial=None, sym1=None, sym2=None, pu=None):  # df is pu of ONE experiment
     # The symbols for each variable
     if sym1 == None:
-        sym1 = symbols['physical_units'][var1]  # if var1 != 'division_ratio' else r'$\ln(f)$'
+        sym1 = symbols['time_averages'][var1]  # if var1 != 'division_ratio' else r'$\ln(f)$'
     if sym2 == None:
-        sym2 = symbols['physical_units'][var2]
+        sym2 = symbols['time_averages'][var2]
 
     df = df[df['max_gen'] > 15].copy().reset_index(drop=True)  # Take out extra small lineages
     
@@ -62,7 +62,7 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
         print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
-    # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    # sns.kdeplot(data=pu, x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
     add_scatterplot_of_averages(var1, var2, pooled, df, ax, 'Trace')  # Put the average behavior
     
     if len(line_func) == 0:  # if we didn't put any
@@ -192,7 +192,8 @@ kde_scatterplot_variables(
     ax=axes[0, 2],
     line_func=[lambda x: np.log(2) / x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, , lambda x: pu['fold_growth'].mean() / x
     pooled=False,
-    artificial=art_ta
+    artificial=art_ta,
+    pu=pu
 )
 
 changed = pu.copy()
@@ -209,7 +210,8 @@ kde_scatterplot_variables(
     line_func=[lambda x: 1 / x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, , lambda x: np.mean(np.exp(pu['fold_growth']) * np.mean(pu['division_ratio'])) / x
     pooled=False,
     artificial=art_changed_ta,
-    sym2=r'$e^{\phi}$'
+    sym2=r'$\overline{e^{\phi}}$',
+    pu=changed
 )
 
 # handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
@@ -221,6 +223,6 @@ plot_pair_scatterplots(pu, 'growth_rate', 'growth_rate', axes[0, 0])
 plot_pair_scatterplots(pu, 'fold_growth', 'fold_growth', axes[1, 0])
 plot_pair_scatterplots(pu, 'division_ratio', 'division_ratio', axes[1, 1])  # , sym1=r'$\overline{\ln(f)}^{\, A}$', sym2=r'$\overline{\ln(f)}^{\, B}$')
 # plt.legend()
-plt.savefig('alpha_tau.png', dpi=300)
+# plt.savefig('alpha_tau.png', dpi=300)
 plt.show()
 plt.close()

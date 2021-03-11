@@ -17,11 +17,11 @@ def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, type_of_li
             # lineages = df[(df['experiment'] == exp)].lineage_ID.unique()
             ax.scatter(time_average.sort_values('lineage_ID')[var1],  # So they don't overlap too much
                        time_average.sort_values('lineage_ID')[var2],  # [df[(df['experiment'] == exp) & (df['lineage_ID'] == lin_id)][var2].mean() for lin_id in lineages[:min(len(lineages), 50)]]
-                       marker=marker, zorder=500, label=exp.split('(')[0] if type_of_lineage == 'Trace' else '', alpha=.6)
+                       marker=marker, zorder=500, label=exp.split('(')[0] if type_of_lineage == 'Trace' else '', alpha=.4)
     else:
         first = time_average.sort_values('lineage_ID')[var1]  # [df[df['lineage_ID'] == lin_id][var1].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
         second = time_average.sort_values('lineage_ID')[var2]  # [df[df['lineage_ID'] == lin_id][var2].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
-        ax.scatter(first, second, marker=marker, c=cmap[0] if type_of_lineage == 'Trace' else cmap[1], zorder=500, alpha=.6,
+        ax.scatter(first, second, marker=marker, c=cmap[0] if type_of_lineage == 'Trace' else cmap[1], zorder=500, alpha=.4,
                    label='Trace' if type_of_lineage == 'Trace' else 'Artificial')
         print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if type_of_lineage == 'Trace'
               else f'Artificial averages correlation: {pearsonr(first, second)[0]}')
@@ -40,10 +40,10 @@ def plot_binned_data(df, var1, var2, num, ax):
         x_binned.append(df.loc[indices][var1].mean())
         y_binned.append(df.loc[indices][var2].mean())
     
-    ax.plot(x_binned, y_binned, marker='s', label='binned', zorder=1000, alpha=.6, c='k')
+    ax.plot(x_binned, y_binned, marker='s', label='binned', zorder=1000, alpha=.4, c='k')
 
 
-def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label='', pooled=False, artificial=None, sym1=None, sym2=None):  # df is pu of ONE experiment
+def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label='', pooled=False, artificial=None, sym1=None, sym2=None, pu=None):  # df is pu of ONE experiment
     # The symbols for each variable
     if sym1 == None:
         sym1 = symbols['physical_units'][var1]  # if var1 != 'division_ratio' else r'$\ln(f)$'
@@ -60,7 +60,7 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
         print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
-    # sns.kdeplot(data=df.sample(frac=.8, replace=False), x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    sns.kdeplot(data=pu, x=var1, y=var2, color=cmap[1], ax=ax, levels=[.2, .3, .4, .5, .6, .7, .8])  # Do the kernel distribution approxiamtion for variables in their physical dimensions
     add_scatterplot_of_averages(var1, var2, pooled, df, ax, type_of_lineage='Trace')  # Put the average behavior
     
     if len(line_func) == 0:  # if we didn't put any
@@ -76,7 +76,7 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
             ax.plot(fake_x, func(fake_x), color='black' if count == 0 else 'gray', ls='--', label=line_label, zorder=1000)  # plot the x distribution
     
     # plt.title(ds)
-    # plot_binned_data(df, var1, var2, num, ax)  # plot the binned data
+    plot_binned_data(pu, var1, var2, num, ax)  # plot the binned data
     ax.set_xlabel(sym1)
     ax.set_ylabel(sym2)
     # ax.legend(title='')
@@ -156,12 +156,13 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
     
 
 pu = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+pu['fold_growth'] = np.exp(pu['fold_growth'])
 ta = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/time_averages_without_outliers.csv').drop('generation', axis=1).drop_duplicates()
 ta['fold_growth'] = np.exp(ta['fold_growth'])
 art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates()
-art['fold_growth'] = np.exp(art['fold_growth'])
+# art['fold_growth'] = np.exp(art['fold_growth'])
 
-num = 10
+num = 8
 
 scale = 1.5
 
@@ -191,10 +192,9 @@ kde_scatterplot_variables(
     ax=axes[0],
     line_func=[lambda x: 2 * x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
     pooled=False,
-    artificial=art
+    artificial=art,
+    pu=pu
 )
-
-print(ta['length_birth'].values - (np.mean(ta['length_birth'].values) * (-1 + np.exp(ta['fold_growth'].mean())))/2)
 
 kde_scatterplot_variables(
     df=ta,
@@ -204,7 +204,8 @@ kde_scatterplot_variables(
     ax=axes[1],
     line_func=[lambda x: x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
     pooled=False,
-    artificial=art
+    artificial=art,
+    pu=pu
 )
 
 kde_scatterplot_variables(
@@ -216,14 +217,15 @@ kde_scatterplot_variables(
     line_func=[lambda x: 2 * np.array([1 for _ in np.arange(len(x))])],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
     pooled=False,
     artificial=art,
-    sym2=r'$e^{\phi}$'
+    sym2=r'$e^{\phi}$',
+    pu=pu
 )
 
 # handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
-handles, labels = axes[0].get_legend_handles_labels()
-axes[0].legend(handles, labels, fontsize='small')  # , markerscale=.5
+# handles, labels = axes[0].get_legend_handles_labels()
+# axes[0].legend(handles, labels, fontsize='small')  # , markerscale=.5
 
 # plt.legend()
-plt.savefig('size_variables.png', dpi=300)
+# plt.savefig('size_variables.png', dpi=300)
 plt.show()
 plt.close()

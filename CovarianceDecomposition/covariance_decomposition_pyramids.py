@@ -14,7 +14,7 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
         # The pooled mean
         pooled_pu_mean = phys[variables].mean()
 
-        pu_corr_df = phys.cov(ddof=1)
+        pu_corr_df = pd.DataFrame(columns=variables, index=variables, dtype=float)
         ta_corr_df = pd.DataFrame(columns=variables, index=variables, dtype=float)
         tc_corr_df = pd.DataFrame(columns=variables, index=variables, dtype=float)
         
@@ -27,31 +27,49 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
                 else:
                     print(param_1, param_2)
                 
-                normalization = (pu[param_1].std(ddof=1) * pu[param_2].std(ddof=1))
+                normalization = (phys[param_1].std(ddof=1) * phys[param_2].std(ddof=1))
+                # print('normalization', normalization)
                 
                 # The two components in the decomposition
-                delta = []
-                line = []
+                total = np.array([])
+                delta = np.array([])
+                line = np.array([])
                 
                 for lin_id in phys.lineage_ID.unique():
                     l_cond = (phys['lineage_ID'] == lin_id)  # Condition that they are in the same experiment and lineage
-                    lin = phys[l_cond].copy()[[param_1, param_2]].dropna().reset_index(drop=True)  # The masked dataframe that contains bacteria in the same lineage and experiment
+                    # The masked dataframe that contains bacteria in the same lineage and experiment
+                    lin = phys[l_cond].copy()[[param_1, param_2]].dropna().reset_index(drop=True) if param_1 != param_2 else phys[l_cond].copy()[param_1].dropna().reset_index(drop=True)
+                    
+                    # print('lin', lin, type(lin))
                 
                     # Add the components
-                    line.append(len(lin) * ((lin[param_1].mean() - pooled_pu_mean[param_1]) * (lin[param_2].mean() - pooled_pu_mean[param_2])))
-                    delta.append((lin[param_1] - lin[param_1].mean()) * (lin[param_2] - lin[param_2].mean()))
+                    if param_1 != param_2:
+                        total = np.append(total, (lin[param_1] - pooled_pu_mean[param_1]).values * (lin[param_2] - pooled_pu_mean[param_2]))
+                        line = np.append(line, len(lin) * ((lin[param_1].mean() - pooled_pu_mean[param_1]) * (lin[param_2].mean() - pooled_pu_mean[param_2])))
+                        delta = np.append(delta, (lin[param_1] - lin[param_1].mean()).values * (lin[param_2] - lin[param_2].mean()).values)
+                    else:
+                        total = np.append(total, (lin - pooled_pu_mean[param_1]) ** 2)
+                        line = np.append(line, np.array(len(lin) * ((lin.mean() - pooled_pu_mean[param_1]) ** 2)))
+                        delta = np.append(delta, np.array((lin - lin.mean()) ** 2))
     
                 # Get the variance of each one
-                delta_cov = (np.sum(delta) / (len(phys[[param_1, param_2]].dropna()) - 1)) / normalization
-                lin_cov = (np.sum(line) / (len(phys[[param_1, param_2]].dropna()) - 1)) / normalization
-    
-                print(delta_cov, lin_cov, (delta_cov + lin_cov), pu_corr_df.loc[param_1, param_2])
+                total_cov = (np.sum(total) / (len(phys[[param_1, param_2]].dropna()) - 1))
+                delta_cov = (np.sum(delta) / (len(phys[[param_1, param_2]].dropna()) - 1))
+                lin_cov = (np.sum(line) / (len(phys[[param_1, param_2]].dropna()) - 1))
                 
                 # Make sure it is a true decomposition
-                assert (np.abs(pu_corr_df.loc[param_1, param_2] - (delta_cov + lin_cov)) < .0000001).all()
+                assert (np.abs(total_cov / normalization - (delta_cov + lin_cov) / normalization) < .0000001).all()
+                
+                lin_cov = np.round(lin_cov / normalization, 2)
+                delta_cov = np.round(delta_cov / normalization, 2)
+                total_cov = np.round(total_cov / normalization, 2)
+                
+                if lin_cov + delta_cov != total_cov:
+                    delta_cov += total_cov - (delta_cov + lin_cov)  # Change the short term correlations accordingly so that they all add up to one
 
                 ta_corr_df.loc[param_1, param_2] = lin_cov
                 tc_corr_df.loc[param_1, param_2] = delta_cov
+                pu_corr_df.loc[param_1, param_2] = total_cov
                 
             memory.append(param_1)
                 
@@ -78,25 +96,14 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
     #
     #     return corr_df
     
-    # So that we get a lower diagonal matrix
-    mask = np.ones_like(normalize_correlation(pu, variables))
-    mask[np.tril_indices_from(mask)] = False
-    
     # The bounds for the color in the heatmap. Given from the bounds of the pearson correlation
     vmax, vmin = 1, -1
 
     npu, nta, ntc = normalize_correlation(pu, variables)
     
-    # # Different normalized correlations corresponding to the different pyramids. Change their column names to the latex version for plotting.
-    # npu = normalize_correlation(pu, variables).rename(columns=symbols['physical_units'], index=symbols['physical_units'])
-    # nta = normalize_correlation(ta, variables).rename(columns=symbols['time_averages'], index=symbols['time_averages'])
-    # ntc = normalize_correlation(tc, variables).rename(columns=symbols['trace_centered'], index=symbols['trace_centered'])
-    
-    print(npu.loc[symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime']])
-    print(nta.loc[symbols['time_averages']['growth_rate'], symbols['time_averages']['generationtime']] + ntc.loc[symbols['trace_centered']['growth_rate'], symbols['trace_centered']['generationtime']])
-    print(nta.loc[symbols['time_averages']['growth_rate'], symbols['time_averages']['generationtime']])
-    print(ntc.loc[symbols['trace_centered']['growth_rate'], symbols['trace_centered']['generationtime']])
-    exit()
+    # So that we get a lower diagonal matrix
+    mask = np.ones_like(npu)
+    mask[np.tril_indices_from(mask)] = False
     
     # Plot the first pyramid
     sns.heatmap(npu, annot=annot, center=0, vmax=vmax,
@@ -116,7 +123,7 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
     axes[2].set_title('C', x=-.2, fontsize='xx-large')
     
     fig.tight_layout(rect=[0, 0, .9, 1])
-    # plt.savefig(f'{figurename}.png', dpi=300)
+    plt.savefig(f'{figurename}.png', dpi=300)
     plt.show()
     plt.close()
 
