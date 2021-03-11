@@ -221,11 +221,7 @@ kde_scatterplot_variables(
     pu=pu
 )
 
-# handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
-# handles, labels = axes[0].get_legend_handles_labels()
-# axes[0].legend(handles, labels, fontsize='small')  # , markerscale=.5
-
 # plt.legend()
 # plt.savefig('size_variables.png', dpi=300)
-plt.show()
+plt.show()  # Need to adjust the axis limits manually
 plt.close()

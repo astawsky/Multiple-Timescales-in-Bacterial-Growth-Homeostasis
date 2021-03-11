@@ -179,11 +179,6 @@ axes[1, 0].set_title('D', x=-.2, fontsize='xx-large')
 axes[1, 1].set_title('E', x=-.2, fontsize='xx-large')
 axes[1, 2].set_title('F', x=-.2, fontsize='xx-large')
 
-# axes[0, 2].set_xlim([.76, 2])
-# axes[0, 2].set_ylim([.18, .95])
-# axes[1, 2].set_xlim([.4, .63])
-# axes[1, 2].set_ylim([1.06, 2.96])
-
 kde_scatterplot_variables(
     df=ta.copy(),
     var1='growth_rate',
@@ -216,13 +211,13 @@ kde_scatterplot_variables(
 
 # handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
 handles, labels = axes[0, 2].get_legend_handles_labels()
-axes[0, 2].legend(handles, labels, fontsize='small')  # , markerscale=.5
+axes[0, 2].legend(handles[::-1], labels[::-1], fontsize='small')  # , markerscale=.5
 
 plot_pair_scatterplots(pu, 'generationtime', 'generationtime', axes[0, 1])
 plot_pair_scatterplots(pu, 'growth_rate', 'growth_rate', axes[0, 0])
 plot_pair_scatterplots(pu, 'fold_growth', 'fold_growth', axes[1, 0])
 plot_pair_scatterplots(pu, 'division_ratio', 'division_ratio', axes[1, 1])  # , sym1=r'$\overline{\ln(f)}^{\, A}$', sym2=r'$\overline{\ln(f)}^{\, B}$')
 # plt.legend()
-# plt.savefig('alpha_tau.png', dpi=300)
+plt.savefig('alpha_tau.png', dpi=300)
 plt.show()
 plt.close()
