@@ -57,7 +57,6 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
         add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, type_of_lineage='Artificial')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
         
         no_nans_art = artificial[[var1, var2]].copy().dropna()  # drop the NaNs
-        print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
     sns.kdeplot(data=pu, x=var1, y=var2, color=cmap[1], ax=ax, levels=[.2, .3, .4, .5, .6, .7, .8])  # Do the kernel distribution approxiamtion for variables in their physical dimensions
@@ -81,10 +80,10 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
     ax.set_ylabel(sym2)
     # ax.legend(title='')
     
-    no_nans = df[[var1, var2]].copy().dropna()
+    no_nans = pu[[var1, var2]].copy().dropna()
     
     print('kde scatter plot')
-    print(f'pooled correlation (Trace): {pearsonr(no_nans[var1].values, no_nans[var2].values)[0]}')
+    print(f'pooled correlation: {pearsonr(no_nans[var1].values, no_nans[var2].values)[0]}')
     print('-' * 200)
 
 

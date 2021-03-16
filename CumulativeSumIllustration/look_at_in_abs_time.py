@@ -14,7 +14,7 @@ from AnalysisCode.global_variables import (
 import seaborn as sns
 
 pu = pd.read_csv(
-    r'/Users/alestawsky/PycharmProjects/Multiple Timescales in Bacterial Growth Homeostasis/Datasets/MG1655_inLB_LongTraces/ProcessedData/physical_units.csv')
+    r'/Users/alestawsky/PycharmProjects/Multiple Timescales in Bacterial Growth Homeostasis/Datasets/MC4100_27C (Tanouchi 2015)/ProcessedData/physical_units.csv')
 # tc = pd.read_csv(r'/Users/alestawsky/PycharmProjects/Multiple Timescales in Bacterial Growth Homeostasis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/trace_centered_without_outliers.csv')
 
 variables = ['growth_rate', 'generationtime', 'fold_growth', 'division_ratio']
@@ -27,17 +27,26 @@ for lin_id in pu.lineage_ID.unique():
     
     lineage = pu[pu['lineage_ID'] == lin_id].copy()
     
-    fig, axes = plt.subplots(2, 1, tight_layout=True)
+    fig, axes = plt.subplots(1, 1, tight_layout=True)
+    # fig, axes = plt.subplots(2, 1, tight_layout=True)
     
-    for ax in axes:
-        ax.axhline(0, ls='-', c='black')
-    
-    for varr, ax in zip(variables, [axes[0], axes[0], axes[1], axes[1]]):
+    # for ax in axes:
+    #     ax.axhline(0, ls='-', c='black')
+    axes.axhline(0, ls='-', c='black')
+        
+    for varr, ax in zip(['generationtime', 'growth_rate'], [axes, axes]):
         print(varr)
-        print(lineage['start_time'].values, normalize(lineage[varr]).values)
+        # print(lineage['start_time'].values, normalize(lineage[varr]).values)
+        # ax.plot(lineage['start_time'].values, lineage[varr].values, label=symbols['physical_units'][varr], marker='x')
         ax.plot(lineage['start_time'].values, normalize(lineage[varr]).values, label=symbols['physical_units'][varr], marker='x')
     
-    for ax in axes:
-        ax.legend()
+    # for varr, ax in zip(variables, [axes[0], axes[0], axes[1], axes[1]]):
+    #     print(varr)
+    #     print(lineage['start_time'].values, normalize(lineage[varr]).values)
+    #     ax.plot(lineage['start_time'].values, normalize(lineage[varr]).values, label=symbols['physical_units'][varr], marker='x')
+    
+    # for ax in axes:
+    #     ax.legend()
+    axes.legend()
     plt.show()
     plt.close()

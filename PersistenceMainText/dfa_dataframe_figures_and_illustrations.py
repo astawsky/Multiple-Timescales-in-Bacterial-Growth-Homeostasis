@@ -462,54 +462,25 @@ def plot_loglog_lines(loglog_plot_recreation, ax):
 
 
 def plot_dfa_slopes(ax):
-    se = pd.DataFrame()
+    se = pd.DataFrame()  # Where we will put all the scaling exponents
     
-    for ds in ['Pooled_SM', 'Maryam_LongTraces', 'Lambda_LB', 'MG1655_inLB_LongTraces']:#dataset_names:
-        # if ds != 'Pooled_SM':
-        #     continue
+    for ds in ['Pooled_SM', 'Maryam_LongTraces', 'Lambda_LB', 'MG1655_inLB_LongTraces']:  # Pool all these datasets into one dataframe
+        
         print(ds)
-        scaling_exponents = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/DFA/Scaling Exponents/{ds}/scaling_exponents.csv')
-        # if ds in tanouchi_datasets:
-        #     name = 'Tanouchi et al (2015)'
-        # elif ds in sm_datasets:
-        #     name = 'Vashista et al (2021)'
-        # elif ds in cgsc_6300_wang_exps:
-        #     name = 'Wang et al (2010),\nCGSC 6300'
-        # elif ds in mm_datasets:
-        #     name = 'Susman et al (2018),\nKohram et al (2020)'
-        # else:
-        #     raise IOError('something wrong')
+        scaling_exponents = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/DFA/Scaling Exponents/{ds}/scaling_exponents.csv')  # Import
         
-        # scaling_exponents['experiment'] = name
-        scaling_exponents['experiment'] = ds
+        scaling_exponents['experiment'] = ds  # Add their dataset name
         
-        se = se.append(scaling_exponents, ignore_index=True)
+        se = se.append(scaling_exponents, ignore_index=True)  # Append them
     
-    se = se.replace({'$f_n e^{\phi_{n}}$': r'$r$'})
+    se = se.replace({'$f_n e^{\phi_{n}}$': r'$r$'})  # Use the latex variable names
     
-    # condition = (se['dataset'] == 'Trace') & (se['kind'] == 'dfa (short)')
-    # condition2 = (se['dataset'] == 'Shuffled') & (se['kind'] == 'dfa (short)')
-    
-    plt.axhline(0.5, ls='-', c='k')
-    # sns.pointplot(data=se[condition], x='variable', y='slope', hue='experiment', join=False, dodge=True, palette=cmap, ci="sd")
-    # sns.boxplot(data=se, x='variable', y='slope', hue='dataset', showfliers=False, palette=cmap)
-    
-    sns.pointplot(data=se, x='variable', y='slope', hue='dataset', join=False, dodge=True, palette=cmap, capsize=.1, ax=ax, ci="sd", zorder=100)
-    # sns.pointplot(data=se[se['dataset'] == 'Trace'], x='variable', y='slope', hue='experiment', join=False, dodge=True, palette=cmap, capsize=.1, ax=ax, ci="sd", zorder=100)
-
-    # for count, datas in enumerate(se.dataset.unique()):
-    #     c = cmap[count]
-    #     y = [se[(se['dataset'] == datas) & (se['variable'] == v)]['slope'].mean() for v in se.variable.unique()]
-    #     yerr = [se[(se['dataset'] == datas) & (se['variable'] == v)]['slope'].std() for v in se.variable.unique()]
-    #     ax.errorbar(x=se.variable.unique(), y=y, yerr=yerr, capsize=.1, c=c, label=datas)
-    
-    # sns.violinplot(data=se, x='variable', y='slope', hue='dataset', join=False, dodge=True, color=cmap[0])
-    # plt.legend(title='')
+    plt.axhline(0.5, ls='-', c='k')  # Plot a black like to show what random processes should be like
+    sns.pointplot(data=se, x='variable', y='slope', hue='dataset', join=False, dodge=True, palette=cmap, capsize=.1, ax=ax, ci="sd", zorder=100)  # The error bars
     ax.set_ylabel(r'$\gamma$')
     ax.set_xlabel('')
-    ax.legend(title='', fontsize='xx-small', markerscale=.5)
-    # ax.legend()
-    # ax.get_legend().remove()
+    # ax.legend(title='', fontsize='small', markerscale=.5)
+    ax.get_legend().remove()
     plt.ylim([0, 1.2])
     
 
@@ -532,6 +503,6 @@ axes[2].set_title('C', x=-.18, fontsize='xx-large')
 plot_dfa_cumsum_illustration(axes[0])
 plot_loglog_lines(recreation[recreation['kind'] == 'dfa (short)'], axes[1])
 plot_dfa_slopes(axes[2])
-plt.savefig('dfa_figure_Hanna_data.png', dpi=500)
+plt.savefig('dfa_figure.png', dpi=500)
 # plt.show()
 plt.close()

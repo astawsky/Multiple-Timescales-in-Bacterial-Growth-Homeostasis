@@ -173,6 +173,7 @@ def trace_center_a_dataframe(df, mm):
                     new_lineage['dataset'] = dataset
                     new_lineage['trap_ID'] = trap_id
                     new_lineage['trace'] = trace
+                    new_lineage['lineage_ID'] = lineage['lineage_ID'].unique()[0]
                     new_lineage['generation'] = np.arange(len(lineage))
                     
                     tc_df = tc_df.append(new_lineage, ignore_index=True)

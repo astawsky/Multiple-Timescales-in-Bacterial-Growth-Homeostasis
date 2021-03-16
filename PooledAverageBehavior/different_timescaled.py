@@ -17,17 +17,17 @@ def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, type_of_li
             # lineages = df[(df['experiment'] == exp)].lineage_ID.unique()
             ax.scatter(time_average.sort_values('lineage_ID')[var1],  # So they don't overlap too much
                        time_average.sort_values('lineage_ID')[var2],  # [df[(df['experiment'] == exp) & (df['lineage_ID'] == lin_id)][var2].mean() for lin_id in lineages[:min(len(lineages), 50)]]
-                       marker='o', label=exp.split('(')[0] if type_of_lineage == 'Trace' else '', alpha=.6)  # zorder=500,
+                       marker='o', label=exp.split('(')[0] if type_of_lineage == 'Trace' else '', alpha=.6, zorder=500)  # zorder=500,
     else:
         first = time_average.sort_values('lineage_ID')[var1]  # [df[df['lineage_ID'] == lin_id][var1].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
         second = time_average.sort_values('lineage_ID')[var2]  # [df[df['lineage_ID'] == lin_id][var2].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
         ax.scatter(first, second, marker='o', c=cmap[0] if type_of_lineage == 'Trace' else cmap[1], alpha=.6,
-                   label=type_of_lineage)  # zorder=500,
+                   label=type_of_lineage, zorder=500)  # zorder=500,
         print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if type_of_lineage == 'Trace'
               else f'Artificial averages correlation: {pearsonr(first, second)[0]}')
-        fakex = np.linspace(bounds[0], bounds[1], len(first))
-        slope, intercept = linregress(fakex, second)[:2]
-        ax.plot(fakex, intercept + slope * fakex, c='blue', ls='-')
+        # fakex = np.linspace(bounds[0], bounds[1], len(first))
+        # slope, intercept = linregress(fakex, second)[:2]
+        # ax.plot(fakex, intercept + slope * fakex, c='blue', ls='-')
 
 
 def plot_binned_data(df, var1, var2, num, ax):
@@ -61,8 +61,16 @@ def plots_physical_units(df, var1, var2, num, ax, line_func=[], line_label='', p
     print(f'Pooled correlation {var1} {var2}: {pearsonr(pool[var1].values, pool[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
-    sns.scatterplot(data=pu, x=var1, y=var2, color='silver', ax=ax, edgecolor=None)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
-    # sns.kdeplot(data=pu, x=var1, y=var2, color='silver', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    # sns.scatterplot(data=pu, x=var1, y=var2, color='silver', ax=ax, edgecolor=None)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    sns.kdeplot(data=pu, x=var1, y=var2, color=cmap[1], ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+
+    if isinstance(artificial, pd.DataFrame):  # If artificial lineages is a dataframe, plot those too
+        artificial = artificial[artificial['max_gen'] > 7].copy().reset_index(drop=True)  # Take out extra small lineages
+        add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, 'Artificial', bounds=[df[var1].min(), df[var1].max()])  # How a random average behavior is supposed to act when only keeping per-cycle correlations
+    
+        no_nans_art = artificial[[var1, var2]].copy().dropna()  # drop the NaNs
+        print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
+        
     add_scatterplot_of_averages(var1, var2, pooled, df, ax, type_of_lineage='Trace', bounds=[df[var1].min(), df[var1].max()])  # Put the average behavior
     
     if len(line_func) == 0:  # if we didn't put any
@@ -78,7 +86,7 @@ def plots_physical_units(df, var1, var2, num, ax, line_func=[], line_label='', p
             ax.plot(fake_x, func(fake_x), color='black' if count == 0 else 'silver', ls='--', label=line_label)  # plot the x distribution
     
     # plt.title(ds)
-    # plot_binned_data(pu, var1, var2, num, ax)  # plot the binned data
+    plot_binned_data(pu, var1, var2, num, ax)  # plot the binned data
     ax.set_xlabel(sym1)
     ax.set_ylabel(sym2)
     # ax.legend(title='')
@@ -105,8 +113,8 @@ def plots_trace_centered(df, var1, var2, num, ax, line_func=[], line_label='', p
     print(f'Pooled correlation {var1} {var2}: {pearsonr(pool[var1].values, pool[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
-    sns.scatterplot(data=pu, x=var1, y=var2, color='silver', ax=ax, edgecolor=None)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
-    # sns.kdeplot(data=pu, x=var1, y=var2, color='silver', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    # sns.scatterplot(data=pu, x=var1, y=var2, color='silver', ax=ax, edgecolor=None)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
+    sns.kdeplot(data=pu, x=var1, y=var2, color='silver', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
     # add_scatterplot_of_averages(var1, var2, pooled, df, ax, marker='x')  # Put the average behavior
     
     if len(line_func) == 0:  # if we didn't put any
@@ -122,7 +130,7 @@ def plots_trace_centered(df, var1, var2, num, ax, line_func=[], line_label='', p
             ax.plot(fake_x, func(fake_x), color='black' if count == 0 else 'silver', ls='--', label=line_label)  # plot the x distribution
     
     # plt.title(ds)
-    # plot_binned_data(pu, var1, var2, num, ax)  # plot the binned data
+    plot_binned_data(pu, var1, var2, num, ax)  # plot the binned data
     ax.set_xlabel(sym1)
     ax.set_ylabel(sym2)
     # ax.legend(title='')
@@ -241,7 +249,7 @@ plots_physical_units(
     var2='growth_rate',
     num=num,
     ax=axes[0, 0],
-    line_func=['regression'],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
+    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
     pooled=False,
     artificial=art,
     pu=pu
@@ -253,7 +261,7 @@ plots_physical_units(
     var2='generationtime',
     num=num,
     ax=axes[0, 1],
-    line_func=['regression'],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
+    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
     pooled=False,
     artificial=art,
     pu=pu
@@ -265,7 +273,7 @@ plots_physical_units(
     var2='division_ratio',
     num=num,
     ax=axes[0, 2],
-    line_func=['regression'],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
+    line_func=[],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
     pooled=False,
     artificial=art,
     pu=pu
@@ -279,7 +287,7 @@ plots_trace_centered(
     var2='growth_rate',
     num=num,
     ax=axes[1, 0],
-    line_func=['regression'],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
+    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
     pooled=False,
     artificial=art,
     pu=tc
@@ -291,7 +299,7 @@ plots_trace_centered(
     var2='generationtime',
     num=num,
     ax=axes[1, 1],
-    line_func=['regression'],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
+    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
     pooled=False,
     artificial=art,
     pu=tc
@@ -303,7 +311,7 @@ plots_trace_centered(
     var2='division_ratio',
     num=num,
     ax=axes[1, 2],
-    line_func=['regression'],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
+    line_func=[],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
     pooled=False,
     artificial=art,
     pu=tc
