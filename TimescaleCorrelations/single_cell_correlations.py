@@ -71,8 +71,6 @@ def main(args):
                     # So it looks presentable
                     ax.xaxis.set_major_formatter(FormatStrFormatter('%.2g'))
                     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2g'))
-                    # ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-                    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
                     
                     if col > row:  # Upper diagonal entries are ignored
                         ax.set_frame_on(False)
@@ -122,9 +120,142 @@ def main(args):
     # put_all_graphs_into_a_big_grid(physical_units, 'physical_units', variables=phenotypic_variables, suffix='')
     print('tc')
     put_all_graphs_into_a_big_grid(trace_centered, 'trace_centered', variables=phenotypic_variables, suffix='')
-    # print('unique ta')
-    # put_all_graphs_into_a_big_grid(time_averages, 'time_averages', variables=phenotypic_variables, suffix='')
+    print('unique ta')
+    put_all_graphs_into_a_big_grid(time_averages, 'time_averages', variables=phenotypic_variables, suffix='')
+    
+    
+def other(args):
+    def get_df(df, label, ds, variables=phenotypic_variables):
+        output_df = pd.DataFrame()
+        
+        memory = []
+        
+        # Go through all possible symmetric variable pairings, ie. combinations of 2
+        for var1 in variables:
+            
+            memory.append(var1)
+            
+            for var2 in variables:
+                if var2 in memory:
+                    continue
+                # index_without_nans = [index for index in df.index if ~np.isnan(df[[col_var, row_var]].loc[index].values).any()]
+                index_without_nans = df[[var1, var2]].dropna().index  # Take out the NaN values
+                
+                col_array = df[var1].loc[index_without_nans].values  # The x-values
+                row_array = df[var2].loc[index_without_nans].values  # The y-values
 
+                # pcorr = str(pearsonr(col_array, row_array)[0])[:4]  # The pearson correlation into a string with a precision of two decimal points
+                pcorr = np.round(pearsonr(col_array, row_array)[0], 2)  # The pearson correlation into a string with a precision of two decimal points
+                slope, intercept, _, _, std_err = linregress(col_array, row_array)  # The linear regression
+                
+                output_df = output_df.append({
+                    'var1': var1,
+                    'var2': var2,
+                    'timescale': label,
+                    'correlation': pcorr,
+                    'slope': slope,
+                    'intercept': intercept,
+                    'std_error': std_err,
+                    'dataset': ds
+                }, ignore_index=True)
+        
+        return output_df
+    
+    # import the labeled measured bacteria in trace-centered units
+    physical_units = pd.read_csv(args['pu'])
+    trace_centered = pd.read_csv(args['tc'])
+    
+    time_averages = get_time_averages_df(physical_units, phenotypic_variables)[['lineage_ID', 'max_gen'] + phenotypic_variables].drop_duplicates().sort_values(['lineage_ID'])  # Get the time-averages
+    time_averages = time_averages[time_averages['max_gen'] > 15]  # Only use lineages with more than 15 generations each
+    
+    output_df = get_df(physical_units, 'physical units', args['data_origin'], phenotypic_variables)
+    output_df = output_df.append(get_df(time_averages, 'long', args['data_origin'], phenotypic_variables), ignore_index=True).reset_index(drop=True)
+    output_df = output_df.append(get_df(trace_centered, 'short', args['data_origin'], phenotypic_variables), ignore_index=True).reset_index(drop=True)
+    
+    return output_df
+
+
+# ds_df = pd.DataFrame()
+
+ds_df = pd.read_csv('dataset_long_short.csv').reset_index(drop=True)
+
+# ds_df['combo'] = ds_df['var1'] + '_' + ds_df['var2']
+#
+# print(ds_df['combo'])
+# print(phenotypic_variables)
+# exit()
+
+for timescale in ['long', 'short', 'physical units']:
+    df = ds_df[ds_df['timescale'] == timescale].copy()
+    
+    print(timescale)
+
+    if timescale == 'long':
+        latex_symbols = {variable: symbols['time_averages'][variable] for variable in phenotypic_variables}  # For the variables we want to show
+    elif timescale == 'short':
+        latex_symbols = {variable: symbols['trace_centered'][variable] for variable in phenotypic_variables}  # For the variables we want to show
+    elif timescale == 'physical units':
+        latex_symbols = {variable: symbols['physical_units'][variable] for variable in phenotypic_variables}  # For the variables we want to show
+    else:
+        raise IOError('wrong')
+    
+    df['combo'] = [f"({latex_symbols[ds_df['var1'].iloc[ind]]}, {latex_symbols[ds_df['var2'].iloc[ind]]})" for ind in np.arange(len(df))]
+    
+    growth_pairs = [
+        ['fold_growth', 'division_ratio'], ['division_ratio', 'generationtime'], ['division_ratio', 'growth_rate'], ['generationtime', 'growth_rate']
+    ]
+    
+    latex_growth_pairs = [f"({latex_symbols[gp[0]]}, {latex_symbols[gp[1]]})" for gp in growth_pairs]
+    
+    composite_pairs = [
+        ['div_and_fold', 'fold_growth'], ['div_and_fold', 'division_ratio'], ['div_and_fold', 'growth_rate'], ['div_and_fold', 'generationtime'], ['fold_growth', 'generationtime'],
+        ['fold_growth', 'growth_rate']
+    ]
+    
+    latex_composite_pairs = [f"({latex_symbols[cp[0]]}, {latex_symbols[cp[1]]})" for cp in composite_pairs]
+    
+    latex_size_pairs = [f"({latex_symbols[variable]}, {latex_symbols['length_birth']})" if variable not in ['length_final', 'growth_rate']
+                        else f"({latex_symbols['length_birth']}, {latex_symbols[variable]})" for variable in phenotypic_variables]
+
+    # Graphical Preferences
+    sns.set_context('paper')
+    sns.set_style("ticks", {'axes.grid': True})
+    
+    fig, axes = plt.subplots(nrows=3, ncols=1, tight_layout=True, figsize=[9, 6.5])
+
+    # # So it looks presentable
+    # ax.xaxis.set_major_formatter(FormatStrFormatter('%.2g'))
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2g'))
+    
+    for row in np.arange(len(axes)):
+        ax = axes[row]
+        ax.axhline(0, c='k')
+        ax.set_ylim([-1, 1])
+        ax.set_yticks([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1])
+        if row == 0:
+            sns.stripplot(data=df[df['combo'].isin(latex_size_pairs)], x='combo', y='correlation', hue='dataset', ax=ax)
+            ax.get_legend().remove()
+            ax.set_ylabel('Size Correlations')
+            # Put the legend out of the figure
+            # ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)  # , fontsize='small'
+        elif row == 1:
+            sns.stripplot(data=df[df['combo'].isin(latex_growth_pairs)], x='combo', y='correlation', hue='dataset', ax=ax)
+            ax.get_legend().remove()
+            ax.set_ylabel('Growth Correlations')
+        else:
+            sns.stripplot(data=df[df['combo'].isin(latex_composite_pairs)], x='combo', y='correlation', hue='dataset', ax=ax)
+            ax.get_legend().remove()
+            ax.set_ylabel('Composite Correlations')
+
+        ax.set_xlabel('')
+    # # Put the legend out of the figure
+    # axes[0].legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., fontsize='small')
+    
+    plt.savefig(f'{timescale}_all_datasets.png', dpi=300)
+    # plt.show()
+    plt.close()
+    
+exit()
 
 # Do all the Mother and Sister Machine data
 for data_origin in dataset_names:
@@ -144,10 +275,14 @@ for data_origin in dataset_names:
         'MM': False if data_origin in sm_datasets else True,
         # Data singularities, long traces with significant filamentation, sudden drop-offs
         'Figures': filepath + '/Figures',
-        'pu': processed_data + 'z_score_under_3/physical_units_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'physical_units.csv',
-        'tc': processed_data + 'z_score_under_3/trace_centered_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'trace_centered.csv'
+        'pu': processed_data + 'z_score_under_3/physical_units_without_outliers.csv',  # if data_origin in wang_datasets else processed_data + 'physical_units.csv'
+        'tc': processed_data + 'z_score_under_3/trace_centered_without_outliers.csv'  # if data_origin in wang_datasets else processed_data + 'physical_units.csv'
     }
 
     main(args)
+    
+    # ds_df = ds_df.append(other(args), ignore_index=True)
 
     print('*' * 200)
+    
+# ds_df.to_csv('dataset_long_short.csv', index=False)

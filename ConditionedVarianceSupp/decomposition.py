@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, phenotypic_variables, cmap, sm_datasets, shuffle_info, cgsc_6300_wang_exps, lexA3_wang_exps
+    symbols, phenotypic_variables, cmap, sm_datasets, shuffle_info, cgsc_6300_wang_exps, lexA3_wang_exps, tanouchi_datasets
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -52,7 +52,7 @@ def shuffle_info_sm(info):
 """ vd conditioning on experiments and lineage """
 
 
-def mm_lineage_experiment(chosen_datasets, ax):
+def mm_lineage_experiment(chosen_datasets, ax, loc='upper left'):
     total_df = pd.DataFrame()  # pool all the experiments
     for data_origin in chosen_datasets:
         pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
@@ -159,26 +159,26 @@ def mm_lineage_experiment(chosen_datasets, ax):
         'Exp': 0,
         'kind': 'Trace'
     }, ignore_index=True)
-    
-    # The order in which the variables appear form left to right
-    real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-                  symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-                  symbols['physical_units']['growth_rate'], '   ']
+
+    # The order we want them to appear in
+    real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+                  symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+                  symbols['physical_units']['added_length'], '  ', '   '])
     
     # Condition for the gray filled line
     conds = (output_df['kind'] == 'Artificial') & (~output_df['variable'].isin(['', ' ', '  ', '   ']))
-    
-    # Fill the noise with color gray
-    ax.fill_between(output_df.variable.unique(),
-                    [output_df[conds]['Exp+Lin'].mean() for _ in range(len(output_df.variable.unique()))],
-                    [0 for _ in range(len(output_df.variable.unique()))], color='lightgrey')
+
+    # Plot the grey noise line
+    ax.fill_between(real_order,  # output_df.variable.unique()
+                    [output_df[conds]['Exp+Lin'].mean() for _ in range(len(real_order))],
+                    [0 for _ in range(len(real_order))], color='lightgrey')
     
     # Plot the barplots for the trace lineages
     for color, y, label in zip([cmap[0], cmap[2]], ['Exp+Lin', 'Exp'], [r'$\Gamma_{Trap}$', r'$\Gamma_{Exp}$']):
-        sns.barplot(x='variable', y=y, data=output_df[output_df['kind'] == 'Trace'], color=color, edgecolor='black', label=label, order=real_order, ax=ax)
+        sns.barplot(x='variable', y=y, data=output_df[output_df['kind'] == 'Trace'], color=color, edgecolor='black', label=label, order=real_order[1:-2], ax=ax)
     
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels, title='', loc='upper left')
+    ax.legend(handles, labels, title='', loc=loc)
     ax.set_xlabel('')
     ax.set_ylabel('Variance Decomposition')
     ax.set_ylim([0, .45])
@@ -187,7 +187,7 @@ def mm_lineage_experiment(chosen_datasets, ax):
 """ vd conditioning on experiment, trap and lineage """
 
 
-def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax):
+def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='upper right'):
     total_df = pd.DataFrame()  # The dataframe with all the experiments in it
 
     # Check what type of pair lineages we want to look at
@@ -342,25 +342,188 @@ def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax):
     #     'kind': 'NA'
     # }, ignore_index=True)
     
-    real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-                  symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-                  symbols['physical_units']['growth_rate'], '   ']
+    # The order we want them to appear in
+    real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+                  symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+                  symbols['physical_units']['added_length'], '  ', '   '])
     
-    plt.fill_between(output_df.variable.unique(),
-                     [output_df[output_df['kind'] == 'Artificial']['Exp+Trap+Lin'].mean() for _ in range(len(output_df.variable.unique()))],
-                     [0 for _ in range(len(output_df.variable.unique()))], color='lightgrey')
+    # Plot the grey noise line
+    ax.fill_between(real_order,  # output_df.variable.unique()
+                    [output_df[output_df['kind'] == 'Artificial']['Exp+Trap+Lin'].mean() for _ in range(len(real_order))],
+                    [0 for _ in range(len(real_order))], color='lightgrey')
     
-    for color, y, label in zip([cmap[0], cmap[1], cmap[2]], ['Exp+Trap+Lin', 'Exp+Trap', 'Exp'], [r'$\Gamma_{Lin}$', r'$\Gamma_{Trap}$', r'$\Gamma_{Exp}$']):
+    for color, y, label in zip([cmap[0], cmap[1], cmap[2]], ['Exp+Trap+Lin', 'Exp+Trap', 'Exp'], [r'$\Gamma_{Lin}$', r'$\Gamma_{Env}$', r'$\Gamma_{Exp}$']):
         # palette = {"Trace": color, "Artificial": 'red'}
-        sns.barplot(x='variable', y=y, data=output_df[output_df['kind'] == 'Trace'], color=color, edgecolor='black', label=label, order=real_order)
-    
-    handles, labels = ax.get_legend_handles_labels()
-    plt.legend(handles, labels, title='', loc='upper left')
-    
+        sns.barplot(x='variable', y=y, data=output_df[output_df['kind'] == 'Trace'], color=color, edgecolor='black', label=label, order=real_order[1:-2])
+
+    ax.set_yticklabels('')
+    ax.set_ylabel('')
     ax.set_xlabel('')
     ax.set_ylabel('')
     plt.ylim([0, .45])
+    
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels, title='', loc=loc)
 
+
+""" variance decomposition for MM data conditioning on traps """
+
+
+def mm_traps(chosen_datasets, ax, loc='upper left'):
+    
+    # The dataframe with all the experiments in it
+    total_df = pd.DataFrame()
+    
+    # Pool the data from the chosen experiments
+    for data_origin in chosen_datasets:
+        print(data_origin)
+        pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
+        pu = pd.read_csv(pu)
+        
+        # Give them the experiment category
+        pu['experiment'] = data_origin
+        
+        # Append the dataframe with this experiment's dataframe
+        total_df = total_df.append(pu, ignore_index=True)
+    
+    # The dataframe that will contain the components of each decomposition inside the "pooled ensemble" sum
+    output_df = pd.DataFrame(columns=['variable', 'intrinsic', 'environment', 'lineage', 'kind'])
+    
+    # For graphical purposes
+    output_df = output_df.append({
+        'variable': '',
+        # This is so we can graph it nicely
+        'Lin': 0,
+        'kind': 'Trace'
+    }, ignore_index=True)
+    
+    for kind in ['Trace', 'Artificial']:  # Trace or artificial lineages that are randomly sampled from the pooled distribution
+        print(kind)
+        if kind == 'Trace':
+            df = total_df.copy()
+            
+            # The pooled mean
+            pooled_pu_mean = df[phenotypic_variables].mean()
+        else:
+            df = shuffle_info(total_df, mm=True)
+            # Shuffle this one manually
+            df['experiment'] = total_df['experiment'].copy().sort_values().values
+            df = df.copy()
+            
+            # The pooled mean
+            pooled_pu_mean = df[phenotypic_variables].mean()
+        
+        # The two components in the decomposition
+        delta = pd.DataFrame(columns=phenotypic_variables)
+        line = pd.DataFrame(columns=phenotypic_variables)
+        
+        for exp in df.experiment.unique():
+            e_cond = (df['experiment'] == exp)  # Condition that they are in the same experiment
+            for lin_id in df[df['experiment'] == exp].lineage_ID.unique():
+                l_cond = (df['lineage_ID'] == lin_id) & e_cond  # Condition that they are in the same experiment and lineage
+                lin = df[l_cond].copy()  # The masked dataframe that contains bacteria in the same lineage and experiment
+                
+                # Add the components
+                line = line.append(lin[phenotypic_variables].count() * ((lin[phenotypic_variables].mean() - pooled_pu_mean) ** 2), ignore_index=True)
+                delta = delta.append(((lin[phenotypic_variables] - lin[phenotypic_variables].mean()) ** 2).sum(), ignore_index=True)
+        
+        # Get the variance of each one
+        delta_var = delta.sum() / (df[phenotypic_variables].count() - 1)
+        lin_var = line.sum() / (df[phenotypic_variables].count() - 1)
+        
+        # Make sure it is a true decomposition
+        assert (np.abs(df[phenotypic_variables].var() - (delta_var[phenotypic_variables] + lin_var[phenotypic_variables])) < .0000001).all()
+        
+        # Add it to the dataframe of final components
+        for variable in phenotypic_variables:
+            output_df = output_df.append({
+                'variable': symbols['physical_units'][variable],
+                'Lin': (lin_var[variable]) / df[variable].var(),
+                'kind': kind
+            }, ignore_index=True)
+    
+    # For graphical purposes
+    for kind in ['Trace', 'Artificial']:
+        output_df = output_df.append({
+            'variable': ' ',
+            # This is so we can graph it nicely
+            'Lin': 0,
+            'kind': kind
+        }, ignore_index=True)
+        
+        output_df = output_df.append({
+            'variable': '  ',
+            # This is so we can graph it nicely
+            'Lin': 0,
+            'kind': kind
+        }, ignore_index=True)
+    output_df = output_df.append({
+        'variable': '   ',
+        # This is so we can graph it nicely
+        'Lin': 0,
+        'kind': 'Trace'
+    }, ignore_index=True)
+    
+    # The order we want them to appear in
+    real_order = ['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+                  symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+                  symbols['physical_units']['added_length'], '  ', '   ']
+    
+    # # The order we want them to appear in
+    # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
+    #               symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
+    #               symbols['physical_units']['growth_rate'], '   ']
+    
+    # Conditions for the grey noise area from the variance decomposition of the artificial lineages
+    conds = (output_df['kind'] == 'Artificial') & (~output_df['variable'].isin(['', ' ', '  ', '   ']))
+    
+    # Plot the grey noise line
+    ax.fill_between(real_order,  # output_df.variable.unique()
+                    [output_df[conds]['Lin'].mean() for _ in range(len(real_order))],
+                    [0 for _ in range(len(real_order))], color='lightgrey')
+    
+    # Plot the barplots
+    sns.barplot(x='variable', y='Lin', data=output_df[output_df['kind'] == 'Trace'], color=cmap[0], edgecolor='black', label='Lineage', order=real_order[1:-2], ax=ax)
+    
+    # The legend in the plot
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, [r'$\Gamma_{Trap}$'], title='', loc=loc)
+    
+    # Graphical things
+    ax.set_xlabel('')
+    ax.set_ylabel('Variance Decomposition')
+    ax.set_ylim([0, .45])
+
+
+# The order we want them to appear in
+real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+              symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+              symbols['physical_units']['added_length'], '  ', '   '])
+
+scale = 1.5
+sns.set_context('paper', font_scale=scale)
+sns.set_style("ticks", {'axes.grid': True})
+fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.5 * scale], tight_layout=True)
+
+axes[0].set_title('A', x=-.2, fontsize='xx-large')
+axes[1].set_title('B', x=-.05, fontsize='xx-large')
+axes[2].set_title('C', x=-.05, fontsize='xx-large')
+
+# For experiments that were not in the main text to show consistency
+mm_traps([tanouchi_datasets[0]], ax=axes[0])
+mm_traps([tanouchi_datasets[1]], ax=axes[1])
+mm_traps([tanouchi_datasets[2]], ax=axes[2])
+for ax in axes:
+    ax.set_ylim([0, .08])
+    # ax.set_xlim([real_order[1], real_order[-2]])
+axes[1].set_ylabel('')
+axes[2].set_ylabel('')
+axes[1].get_legend().remove()
+axes[2].get_legend().remove()
+
+plt.savefig('tanouchi_variance_decomposition.png', dpi=300)
+plt.show()
+plt.close()
 
 scale = 1.5
 sns.set_context('paper', font_scale=scale)
@@ -370,17 +533,27 @@ fig, axes = plt.subplots(1, 2, figsize=[6.5 * scale, 3.5 * scale], tight_layout=
 axes[0].set_title('A', x=-.2, fontsize='xx-large')
 axes[1].set_title('B', x=-.05, fontsize='xx-large')
 
-# # For experiments that were not in the main text to show consistency
-# mm_lineage_experiment(cgsc_6300_wang_exps, ax=axes[0])
-# mm_lineage_experiment(lexA3_wang_exps, ax=axes[1])
-# axes[1].get_legend().remove()  # Repetative
+# For experiments that were not in the main text to show consistency
+mm_lineage_experiment(cgsc_6300_wang_exps, ax=axes[0])
+mm_lineage_experiment(lexA3_wang_exps, ax=axes[1])
+axes[1].get_legend().remove()  # Repetative
+
+plt.savefig('wang_variance_decomposition.png', dpi=300)
+plt.show()
+plt.close()
+
+scale = 1.5
+sns.set_context('paper', font_scale=scale)
+sns.set_style("ticks", {'axes.grid': True})
+fig, axes = plt.subplots(1, 2, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
+
+axes[0].set_title('A', x=-.2, fontsize='xx-large')
+axes[1].set_title('B', x=-.05, fontsize='xx-large')
 
 # For the MM and SM experiments in the main text
-mm_lineage_experiment(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[0])
-vd_with_trap_lineage_and_experiments(sm_datasets, phenotypic_variables, lin_type='NL', ax=axes[1])
+mm_lineage_experiment(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[0], loc='upper right')
+vd_with_trap_lineage_and_experiments(sm_datasets, phenotypic_variables, 'NL', axes[1])
 
-axes[1].set_yticklabels('')
-axes[1].set_ylabel('')
-plt.legend()
+plt.savefig('mm_and_sm_decompositions.png', dpi=300)
 plt.show()
 plt.close()

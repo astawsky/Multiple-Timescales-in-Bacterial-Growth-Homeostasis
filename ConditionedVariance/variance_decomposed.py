@@ -135,10 +135,15 @@ def vd_with_trap_and_lineage(variables, lin_type, ax):
             'kind': 'NA'
         }, ignore_index=True)
     
-    # The order they appear in
-    real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-                  symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-                  symbols['physical_units']['growth_rate'], '   ']
+    # The order we want them to appear in
+    real_order = ['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+                  symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+                  symbols['physical_units']['added_length'], '  ', '   ']
+    
+    # # The order they appear in
+    # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
+    #               symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
+    #               symbols['physical_units']['growth_rate'], '   ']
     
     # Fill in the grey area of the noise
     plt.fill_between(output_df.variable.unique(),
@@ -259,9 +264,14 @@ def mm_traps(chosen_datasets, ax):
     }, ignore_index=True)
     
     # The order we want them to appear in
-    real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-                  symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-                  symbols['physical_units']['growth_rate'], '   ']
+    real_order = ['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+                  symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+                  symbols['physical_units']['added_length'], '  ', '   ']
+    
+    # # The order we want them to appear in
+    # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
+    #               symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
+    #               symbols['physical_units']['growth_rate'], '   ']
     
     # Conditions for the grey noise area from the variance decomposition of the artificial lineages
     conds = (output_df['kind'] == 'Artificial') & (~output_df['variable'].isin(['', ' ', '  ', '   ']))
@@ -300,11 +310,13 @@ def cell_cycle_illustration(ax):
 
 
 # Graphical preferences
-scale = 1.5
+scale = 2
+# scale = 1.5
 sns.set_context('paper', font_scale=scale)
 sns.set_style("ticks", {'axes.grid': True})
 
-fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
+fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.5 * scale], tight_layout=True)
+# fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
 
 axes[0].set_title('A', x=-.2, fontsize='xx-large')
 axes[1].set_title('B', x=-.3, fontsize='xx-large')
@@ -331,4 +343,5 @@ vd_with_trap_and_lineage(phenotypic_variables, lin_type='NL', ax=axes[2])
 
 plt.tight_layout()
 plt.show()  # has to be manually adjusted to some degree
+plt.savefig('testing.png', dpi=300)
 plt.close()
