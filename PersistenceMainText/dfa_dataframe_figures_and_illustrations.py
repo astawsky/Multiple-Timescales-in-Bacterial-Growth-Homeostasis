@@ -476,7 +476,8 @@ def plot_dfa_slopes(ax):
     se = se.replace({'$f_n e^{\phi_{n}}$': r'$r$'})  # Use the latex variable names
     
     plt.axhline(0.5, ls='-', c='k')  # Plot a black like to show what random processes should be like
-    sns.pointplot(data=se, x='variable', y='slope', hue='dataset', join=False, dodge=True, palette=cmap, capsize=.1, ax=ax, ci="sd", zorder=100)  # The error bars
+    sns.pointplot(data=se, x='variable', y='slope', hue='dataset', join=False, dodge=True, palette=cmap, capsize=.1, ax=ax, ci="sd", zorder=100,
+                  order=['$\\alpha$', '$\\tau$', '$\\phi$', '$f$', '$r$', '$x_0$', '$\\Delta$'])  # The error bars
     ax.set_ylabel(r'$\gamma$')
     ax.set_xlabel('')
     # ax.legend(title='', fontsize='small', markerscale=.5)

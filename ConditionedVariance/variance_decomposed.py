@@ -134,11 +134,11 @@ def vd_with_trap_and_lineage(variables, lin_type, ax):
             'Trap': 0,
             'kind': 'NA'
         }, ignore_index=True)
-    
+
     # The order we want them to appear in
-    real_order = ['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
-                  symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
-                  symbols['physical_units']['added_length'], '  ', '   ']
+    real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+                           symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+                           symbols['physical_units']['added_length'], '  ', '   '])
     
     # # The order they appear in
     # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
@@ -146,14 +146,14 @@ def vd_with_trap_and_lineage(variables, lin_type, ax):
     #               symbols['physical_units']['growth_rate'], '   ']
     
     # Fill in the grey area of the noise
-    plt.fill_between(output_df.variable.unique(),
-                     [output_df[output_df['kind'] == 'Artificial']['Trap+Lin'].mean() for _ in range(len(output_df.variable.unique()))],
-                     [0 for _ in range(len(output_df.variable.unique()))], color='lightgrey')
+    plt.fill_between(real_order,
+                     [output_df[output_df['kind'] == 'Artificial']['Trap+Lin'].mean() for _ in range(len(real_order))],
+                     [0 for _ in range(len(real_order))], color='lightgrey')
     
     # Plot the barplots
     for color, y, label in zip([cmap[0], cmap[1]], ['Trap+Lin', 'Trap'], [r'$\Gamma_{Lin}$', r'$\Gamma_{Env}$']):
         # palette = {"Trace": color, "Artificial": 'red'}
-        sns.barplot(x='variable', y=y, data=output_df[output_df['kind'] == 'Trace'], color=color, edgecolor='black', label=label, order=real_order)
+        sns.barplot(x='variable', y=y, data=output_df[output_df['kind'] == 'Trace'], color=color, edgecolor='black', label=label, order=real_order[1:-2])
     
     # The legend
     handles, labels = ax.get_legend_handles_labels()
@@ -264,9 +264,9 @@ def mm_traps(chosen_datasets, ax):
     }, ignore_index=True)
     
     # The order we want them to appear in
-    real_order = ['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+    real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
                   symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
-                  symbols['physical_units']['added_length'], '  ', '   ']
+                  symbols['physical_units']['added_length'], '  ', '   '])
     
     # # The order we want them to appear in
     # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
@@ -277,12 +277,12 @@ def mm_traps(chosen_datasets, ax):
     conds = (output_df['kind'] == 'Artificial') & (~output_df['variable'].isin(['', ' ', '  ', '   ']))
     
     # Plot the grey noise line
-    ax.fill_between(output_df.variable.unique(),
-                    [output_df[conds]['Lin'].mean() for _ in range(len(output_df.variable.unique()))],
-                    [0 for _ in range(len(output_df.variable.unique()))], color='lightgrey')
+    ax.fill_between(real_order,
+                    [output_df[conds]['Lin'].mean() for _ in range(len(real_order))],
+                    [0 for _ in range(len(real_order))], color='lightgrey')
     
     # Plot the barplots
-    sns.barplot(x='variable', y='Lin', data=output_df[output_df['kind'] == 'Trace'], color=cmap[0], edgecolor='black', label='Lineage', order=real_order, ax=ax)
+    sns.barplot(x='variable', y='Lin', data=output_df[output_df['kind'] == 'Trace'], color=cmap[0], edgecolor='black', label='Lineage', order=real_order[1:-2], ax=ax)
     
     # The legend in the plot
     handles, labels = ax.get_legend_handles_labels()
@@ -323,6 +323,8 @@ axes[1].set_title('B', x=-.3, fontsize='xx-large')
 axes[2].set_title('C', x=-.3, fontsize='xx-large')
 
 cell_cycle_illustration(axes[0])
+axes[0].set_xlim([1.48, 2.4])
+axes[0].set_ylim([2.8, 6.5])
 axes[0].set_ylabel(r'length $(\mu$m$)$')
 axes[0].set_xlabel(r'time $($hr$)$')
 
@@ -343,5 +345,5 @@ vd_with_trap_and_lineage(phenotypic_variables, lin_type='NL', ax=axes[2])
 
 plt.tight_layout()
 plt.show()  # has to be manually adjusted to some degree
-plt.savefig('testing.png', dpi=300)
+# plt.savefig('vd_square.png', dpi=300)
 plt.close()

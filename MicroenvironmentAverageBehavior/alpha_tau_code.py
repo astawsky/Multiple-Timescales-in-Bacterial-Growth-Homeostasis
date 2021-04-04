@@ -23,8 +23,9 @@ def add_scatterplot_of_averages(var1, var2, pooled, time_average, ax, type_of_li
         second = time_average.sort_values('lineage_ID')[var2]  # [df[df['lineage_ID'] == lin_id][var2].mean() for lin_id in df.lineage_ID.unique() if len(df[df['lineage_ID'] == lin_id]) > 6]
         ax.scatter(first, second, marker=marker, c=cmap[0] if type_of_lineage == 'Trace' else cmap[1], zorder=500, alpha=.6,
                    label=type_of_lineage)
-        print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if type_of_lineage == 'Trace'
-              else f'Artificial averages correlation: {pearsonr(first, second)[0]}')
+        print(f'TA {type_of_lineage} correlation {var1} {var2}, pearson: {pearsonr(first, second)[0]}, covariance: {np.cov(first, second)[0, 1]}, stds: {np.std(first), np.std(second)}')
+        # print(f'Trace averages correlation: {pearsonr(first, second)[0]}' if type_of_lineage == 'Trace'
+        #       else f'Artificial averages correlation: {pearsonr(first, second)[0]}')
 
 
 def plot_binned_data(df, var1, var2, num, ax):
@@ -52,14 +53,11 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
 
     df = df[df['max_gen'] > 15].copy().reset_index(drop=True)  # Take out extra small lineages
     
-    print(len(df))
-    
     if isinstance(artificial, pd.DataFrame):  # If artificial lineages is a dataframe, plot those too
         artificial = artificial[artificial['max_gen'] > 7].copy().reset_index(drop=True)  # Take out extra small lineages
         add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, 'Artificial')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
         
         no_nans_art = artificial[[var1, var2]].copy().dropna()  # drop the NaNs
-        print(f'pooled correlation (Artificial): {pearsonr(no_nans_art[var1].values, no_nans_art[var2].values)[0]}')
     
     # To speed it up we sample randomly 1,000 points
     # sns.kdeplot(data=pu, x=var1, y=var2, color='gray', ax=ax)  # Do the kernel distribution approxiamtion for variables in their physical dimensions
@@ -83,10 +81,11 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
     ax.set_ylabel(sym2)
     # ax.legend(title='')
     
-    no_nans = df[[var1, var2]].copy().dropna()
-    
-    print('kde scatter plot')
-    print(f'pooled correlation (Trace): {pearsonr(no_nans[var1].values, no_nans[var2].values)[0]}')
+    no_nans = pu[[var1, var2]].copy().dropna()  # To print the correlations covariance and stds
+    x_a, y_b = no_nans[var1].values, no_nans[var2].values
+
+    print(np.cov(x_a, y_b))
+    print(f'PU pooled correlation {var1} {var2}, pearson: {pearsonr(x_a, y_b)[0]}, covariance: {np.cov(x_a, y_b)[0, 1]}, stds: {np.var(x_a), np.var(y_b)}')
     print('-' * 200)
 
 
@@ -149,7 +148,8 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
     ax.set_xlabel(sym1)
     ax.set_ylabel(sym2)
     
-    print(f'pair scatterplot {var1} {var2}: {pearsonr(x_a, y_b)[0]}')
+    print(np.cov(x_a, y_b))
+    print(f'pair scatterplot {var1} {var2}, pearson: {pearsonr(x_a, y_b)[0]}, covariance: {np.cov(x_a, y_b)[0, 1]}, stds: {np.var(x_a)}')
 
 
 #########################################
@@ -218,6 +218,6 @@ plot_pair_scatterplots(pu, 'growth_rate', 'growth_rate', axes[0, 0])
 plot_pair_scatterplots(pu, 'fold_growth', 'fold_growth', axes[1, 0])
 plot_pair_scatterplots(pu, 'division_ratio', 'division_ratio', axes[1, 1])  # , sym1=r'$\overline{\ln(f)}^{\, A}$', sym2=r'$\overline{\ln(f)}^{\, B}$')
 # plt.legend()
-plt.savefig('alpha_tau.png', dpi=300)
+# plt.savefig('alpha_tau.png', dpi=300)
 plt.show()
 plt.close()
