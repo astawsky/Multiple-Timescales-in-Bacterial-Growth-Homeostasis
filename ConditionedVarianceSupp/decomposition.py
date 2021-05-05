@@ -551,7 +551,7 @@ axes[0].set_title('A', x=-.2, fontsize='xx-large')
 axes[1].set_title('B', x=-.05, fontsize='xx-large')
 
 # For the MM and SM experiments in the main text
-mm_lineage_experiment(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[0], loc='upper right')
+mm_lineage_experiment(['lambda_lb', 'Maryam_LongTraces'], ax=axes[0], loc='upper right')
 vd_with_trap_lineage_and_experiments(sm_datasets, phenotypic_variables, 'NL', axes[1])
 
 plt.savefig('mm_and_sm_decompositions.png', dpi=300)

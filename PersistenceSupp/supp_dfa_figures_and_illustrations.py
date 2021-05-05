@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    cmap, cgsc_6300_wang_exps, lexA3_wang_exps, mm_datasets
+    cmap, cgsc_6300_wang_exps, lexA3_wang_exps, mm_datasets, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 
 se = pd.DataFrame()  # Where to save all the scaling exponents for the different experiment groups
@@ -15,7 +16,7 @@ for name, group in zip(['Wang 2010, CGSC 6300', 'Wang 2010, lexA3', 'Susman and 
     
     for ds in group:
         # import the scaling exponents already calculated
-        scaling_exponents = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/DFA/Scaling Exponents/{ds}/scaling_exponents.csv')
+        scaling_exponents = pd.read_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}{ds}{slash}scaling_exponents.csv')
         
         # put the experiment category
         scaling_exponents['experiment'] = name

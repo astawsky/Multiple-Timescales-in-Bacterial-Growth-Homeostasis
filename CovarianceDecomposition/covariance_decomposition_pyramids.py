@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from AnalysisCode.global_variables import phenotypic_variables, symbols, get_time_averages_df, trace_center_a_dataframe
+from AnalysisCode.global_variables import phenotypic_variables, symbols, get_time_averages_df, retrieve_dataframe_directory
 
 
 def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_variables, figurename='covariance decomposition, main variables', annot=True):
@@ -132,9 +132,9 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
 variables = ['div_and_fold', 'fold_growth', 'division_ratio', 'generationtime', 'length_birth', 'growth_rate']
 
 # The pooled sister machine data in physical units, time-averages and trace-centered
-pu = pd.read_csv(r'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
 ta = get_time_averages_df(pu, phenotypic_variables)
-tc = pd.read_csv(r'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/trace_centered_without_outliers.csv')
+tc = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'tc', False))
 
 # Graphical preferences
 scale = 1.5

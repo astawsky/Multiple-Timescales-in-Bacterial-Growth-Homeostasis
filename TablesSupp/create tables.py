@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, phenotypic_variables, cgsc_6300_wang_exps, lexA3_wang_exps, mm_datasets, dataset_names
+    symbols, phenotypic_variables, cgsc_6300_wang_exps, lexA3_wang_exps, mm_datasets, dataset_names, retrieve_dataframe_directory
 )
 import pandas as pd
 import numpy as np
@@ -36,7 +36,7 @@ generation_per_lineage = []
 for ds in ds_names:
     print(ds)
     # import the data
-    pu = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/{ds}/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+    pu = pd.read_csv(retrieve_dataframe_directory(ds, 'pu', False))
     # number of lineages
     num_of_lineages.append(len(pu.lineage_ID.unique()))
     # mean and std of gen per lineage
@@ -61,8 +61,8 @@ cv_latex = pd.DataFrame(columns=['Experiment Label'] + [symbols['physical_units'
 count = 0
 for ds in ds_names:
     print(count, ds)
-    
-    pu = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/{ds}/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+
+    pu = pd.read_csv(retrieve_dataframe_directory(ds, 'pu', False))
     
     to_add = {'Experiment Label': count}
     

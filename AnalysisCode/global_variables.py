@@ -5,6 +5,7 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import os
+from sys import platform
 
 """ create a folder with the name of the string inputted """
 
@@ -470,33 +471,18 @@ def add_control_and_cut_extra_intervals(info):
 def pool_experiments(group, name, outliers=True, dimensions='pu'):
     pooled = pd.DataFrame()
     
-    reference_id = {ds: count for count, ds in enumerate(dataset_names) if ds != 'Pooled_SM'}
-    
     for exp in group:
-        if dimensions == 'pu':
-            df_to_get = 'physical_units'
-        elif dimensions == 'tc':
-            df_to_get = 'trace_centered'
-        elif dimensions == 'ta':
-            df_to_get = 'time_averages'
-        else:
-            raise IOError('Incorrect dimensions. Options are pu, tc or ta.')
-        
-        if outliers:
-            dir_name = f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/{exp}/ProcessedData/{df_to_get}.csv'
-        else:
-            dir_name = f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/{exp}/ProcessedData/z_score_under_3/{df_to_get}_without_outliers.csv'
-            
-        pu_exp = pd.read_csv(dir_name)
+
+        exp_df = pd.read_csv(retrieve_dataframe_directory(exp, dimensions, outliers))
         
         if len(pooled) == 0:
-            pu_exp['lineage_ID'] = pu_exp['lineage_ID']
+            exp_df['lineage_ID'] = exp_df['lineage_ID']
         else:
-            pu_exp['lineage_ID'] = pu_exp['lineage_ID'] + pooled['lineage_ID'].max() + 1  # Re-index the lineage_IDs
-        pu_exp['experiment_group'] = name
-        pu_exp['experiment_name'] = '0-4'  # reference_id[exp]
-        
-        pooled = pooled.append(pu_exp, ignore_index=True)
+            exp_df['lineage_ID'] = exp_df['lineage_ID'] + pooled['lineage_ID'].max() + 1  # Re-index the lineage_IDs
+        exp_df['experiment_group'] = name
+        exp_df['experiment_name'] = '0-4'  # reference_id[exp]
+
+        pooled = pooled.append(exp_df, ignore_index=True)
     
     return pooled
 
@@ -520,7 +506,7 @@ def check_the_division(args, lineages=[], raw_lineages=[], raw_indices=[], pu=[]
         step_size = 1 / 60
     elif args['data_origin'] in sm_datasets:
         step_size = 3 / 60
-    elif args['data_origin'] == 'Lambda_LB':
+    elif args['data_origin'] == 'lambda_lb':
         step_size = 6 / 60
     else:
         raise IOError('This code is not meant to run the data inputted. Please label the data and put it in as an if-statement.')
@@ -551,16 +537,18 @@ def check_the_division(args, lineages=[], raw_lineages=[], raw_indices=[], pu=[]
         non_positives = ri[ri['type'] == 'non_positives']['value'].values.copy()
         singularities = ri[ri['type'] == 'singularities']['value'].values.copy()
         rises = ri[ri['type'] == 'rises']['value'].values.copy()
+        # start_indices = cycle_variables_lineage['start_time'].values.copy() / step_size
+        # end_indices = cycle_variables_lineage['end_time'].values.copy() / step_size
         start_indices = ri[ri['type'] == 'start']['value'].values.copy()
         end_indices = ri[ri['type'] == 'end']['value'].values.copy()
         
         ax.plot(rl['time'].values, rl['length'].values, marker='o')
         if len(non_positives) > 0:
-            ax.scatter(rl['time'].iloc[non_positives].values, rl['length'].iloc[non_positives].values, label='non_positives', marker='o')
+            ax.scatter(rl['time'].iloc[non_positives].values, rl['length'].iloc[non_positives].values, label='non_positives', marker='o', color='red')
         if len(singularities) > 0:
-            ax.scatter(rl['time'].iloc[singularities].values, rl['length'].iloc[singularities].values, label='singularities', marker='v')
+            ax.scatter(rl['time'].iloc[singularities].values, rl['length'].iloc[singularities].values, label='singularities', marker='v', color='black')
         if len(rises) > 0:
-            ax.scatter(rl['time'].iloc[rises].values, rl['length'].iloc[rises].values, label='failures', marker='^')
+            ax.scatter(rl['time'].iloc[rises].values, rl['length'].iloc[rises].values, label='failures', marker='^', color='green')
         
         for start, end, gt, gr, lb in zip(start_indices, end_indices, cycle_variables_lineage.generationtime, cycle_variables_lineage.growth_rate, cycle_variables_lineage.length_birth):
             
@@ -577,12 +565,54 @@ def check_the_division(args, lineages=[], raw_lineages=[], raw_indices=[], pu=[]
         if plot_it:
             ax.set_yscale('log')
             ax.legend()
+            ax.set_xlabel('Absolute Time (Mins.)')
+            ax.set_ylabel(r'Length/Size $(\mu m)$')
             plt.tight_layout()
             plt.show()
             plt.close()
             
             ax = []
 
+
+""" Retrieve the local directory of the datasets """
+
+
+def retrieve_dataframe_directory(ds_to_take_from, kind_of_dataframe, include_outliers=True):
+    """
+    
+    :param ds_to_take_from: 'Pooled_SM', 'Maryam_LongTraces', etc...
+    :param kind_of_dataframe: 'pu', 'ta', 'tc' ONLY
+    :param include_outliers: Boolean
+    :return: Local directory of the dataframe.
+    """
+
+    correct_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f'{slash}Datasets{slash}' + ds_to_take_from + f'{slash}ProcessedData{slash}'
+    
+    # Decide what kind of dataframe we are looking for
+    if kind_of_dataframe == 'pu':
+        kind_part = 'physical_units'
+    elif kind_of_dataframe == 'ta':
+        kind_part = 'time_averages'
+    elif kind_of_dataframe == 'tc':
+        kind_part = 'trace_centered'
+    else:
+        raise IOError("kind_of_dataframe can ONLY be 'pu', 'ta', or 'tc'.")
+    
+    # Decide if we want outliers and add everything together in the directory string
+    if include_outliers:
+        correct_directory += f'{kind_part}.csv'
+    else:
+        correct_directory += f'z_score_under_3{slash}{kind_part}_without_outliers.csv'
+        
+    return correct_directory
+
+
+if platform == 'win32':  # We are operating in Windows
+    slash = '\\'
+elif platform == 'darwin':  # We are operating in Mac
+    slash = r'/'
+else:
+    raise IOError('ERROR: This code is being run on an OS that is not Windows or Mac.')
 
 phenotypic_variables = ['div_then_fold', 'div_and_fold', 'fold_then_div', 'fold_growth', 'division_ratio', 'added_length', 'generationtime', 'length_birth', 'length_final', 'growth_rate']
 symbols = {
@@ -625,7 +655,7 @@ cgsc_6300_wang_exps = ['20090210_E_coli_MG1655_(CGSC_6300)_Wang2010', '20090129_
 lexA3_wang_exps = ['20090930_E_coli_MG1655_lexA3_Wang2010', '20090923_E_coli_MG1655_lexA3_Wang2010', '20090922_E_coli_MG1655_lexA3_Wang2010']
 tanouchi_datasets = ['MC4100_25C (Tanouchi 2015)', 'MC4100_27C (Tanouchi 2015)', 'MC4100_37C (Tanouchi 2015)']
 sm_datasets = ['1015_NL', '062718_SL', '071318_SL', '072818_SL_NL', '101218_SL_NL', 'Pooled_SM']
-mm_datasets = ['Lambda_LB', 'Maryam_LongTraces', 'MG1655_inLB_LongTraces']  # 8-31-16 Continue
+mm_datasets = ['lambda_lb', 'Maryam_LongTraces', 'MG1655_inLB_LongTraces']  # 8-31-16 Continue
 dataset_names = sm_datasets + mm_datasets + tanouchi_datasets + cgsc_6300_wang_exps + lexA3_wang_exps
 cmap = sns.color_palette('tab10')
 

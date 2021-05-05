@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, cmap, shuffle_info, phenotypic_variables, get_time_averages_df
+    symbols, cmap, shuffle_info, phenotypic_variables, get_time_averages_df, retrieve_dataframe_directory
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -157,8 +157,8 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
 #########################################
 
 
-pu = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
-ta = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/time_averages_without_outliers.csv').drop('generation', axis=1).drop_duplicates()
+pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
+ta = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'ta', False)).drop('generation', axis=1).drop_duplicates()
 # pu['fold_growth'] = np.log(pu['fold_growth'])
 art = shuffle_info(pu, False)
 art_ta = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates().reset_index(drop=True)

@@ -9,7 +9,7 @@ from scipy.signal import find_peaks
 from sklearn.linear_model import LinearRegression
 from AnalysisCode.global_variables import (
     phenotypic_variables, create_folder, dataset_names, sm_datasets, wang_datasets, tanouchi_datasets,
-    get_time_averages_df, check_the_division
+    get_time_averages_df, check_the_division, slash
 )
 
 """ Input a dataframe with the phenotypic variables we want to include in the outgoing dataframe and center each lineage by its time-average """
@@ -417,8 +417,8 @@ class MM:
                 lineage = pd.read_csv(file, delimiter=',', names=['time', 'division_flag', 'length', 'fluor', 'avg_fluor'])
                 lineage['time'] = (lineage['time'] - 1) / 60  # Because we map the index to the correct time-step-size which is 1 minute
                 time_step = 1 / 60  # one-minute measurements!
-            elif self.args['data_origin'] == 'Lambda_LB':
-                # There are quite a lot of files with an extra column at the beginning
+            elif self.args['data_origin'] == 'lambda_lb':
+                # There are quite a lot of files with an extra column at the beginning  Rawdata/pos17-1, pos17-1
                 if filename in extra_column:
                     lineage = pd.read_csv(file, delimiter='\t', names=['_', 'time', 'length', 'something similar to length', 'something protein', 'other protein'])[['time', 'length']]
                 elif filename == 'pos15':
@@ -580,7 +580,7 @@ class MM:
         
         self.args = args
         
-        self.file_paths = glob.glob(self.args['raw_data'] + '/*')  # The names of all the data files in an array to loop over and process
+        self.file_paths = sorted(glob.glob(self.args['raw_data'] + f'{slash}*'))  # The names of all the data files in an array to loop over and process
         
         if self.args['check']:
             print('type of MM data we are processing:', args['data_origin'])
@@ -592,7 +592,7 @@ class MM:
         self.cycle_variables = pd.DataFrame(columns=phenotypic_variables + ['lineage_ID', 'generation'])  # The physiological variables for each cell dataframe
         self.with_outliers_cycle_variables = pd.DataFrame(columns=phenotypic_variables + ['lineage_ID', 'generation'])  # The physiological variables for each cell dataframe, including outliers
         
-        # The files in Lambda_LB file that contain an extra column in the .txt file. It caused a problem before taking it into account...
+        # The files in lambda_lb file that contain an extra column in the .txt file. It caused a problem before taking it into account...
         extra_column = [
             'pos0-1',
             'pos0-1-daughter',
@@ -623,7 +623,7 @@ class MM:
             'pos20'
         ]
         
-        # Some of the experiments have a wrong time step for the Lambda_LB, we rectify it here
+        # Some of the experiments have a wrong time step for the lambda_lb, we rectify it here
         correct_timestamp = ['pos1-1-daughter', 'pos17-1', 'pos17-3', 'pos20', 'pos17-2', 'pos0-1',
                              'pos16-3', 'pos16-2', 'pos16-1', 'pos18-3', 'pos18-2', 'Pos9-1', 'Pos10',
                              'pos19-3', 'Pos9-2', 'pos19-2', 'pos15']
@@ -660,10 +660,10 @@ class MM:
             
             physiological_variables, physiological_variables_with_outliers, self.raw_indices = deal_with_indices(lineage, count + 1 - offset, self.raw_indices, self.args['check'])
             
-            # if check:
-            #     check_the_division(args, lineages=[count + 1 - offset], raw_lineages=raw_lineage, raw_indices=pd.DataFrame.from_dict(to_append, "index"), pu=cycle_variables_lineage)
-            # check_the_division(args, lineages=[count + 1 - offset], raw_lineages=raw_lineage, raw_indices=pd.DataFrame.from_dict(to_append, "index"), pu=cycle_variables_lineage)
-            
+            if self.args['check']:
+                check_the_division(args, lineages=[count + 1 - offset], raw_lineages=lineage, raw_indices=self.raw_indices, pu=physiological_variables)
+            # check_the_division(args, lineages=[count + 1 - offset], raw_lineages=lineage, raw_indices=self.raw_indices, pu=physiological_variables)
+
             # append the physiological variables of this lineage to the bigger dataframe for all lineages in an experiment
             self.cycle_variables = self.cycle_variables.append(physiological_variables, ignore_index=True)
             self.with_outliers_cycle_variables = self.with_outliers_cycle_variables.append(physiological_variables_with_outliers, ignore_index=True)
@@ -674,7 +674,7 @@ class MM:
         
         create_folder(self.args['without_outliers'])  # create the necessary folders, just in case it is not created already
         
-        save_dataframes(self)  # Save the dataframe to .csv file
+        # save_dataframes(self)  # Save the dataframe to .csv file
     
     def remove_faulty_lineages(self):
         if self.args['data_origin'] == '20090529_E_coli_Br_SJ119_Wang2010':  # Take out the trajectories that cannot be used
@@ -936,7 +936,7 @@ class SM:
 
 
 """ Create the csv files for physical, trace-centered, and trap-centered units for MM and SM data """
-for data_origin in dataset_names:  # For all the experiments process the raw data
+for data_origin in ['Maryam_LongTraces']:#dataset_names:  # For all the experiments process the raw data
     print(data_origin)
     
     """
@@ -949,9 +949,9 @@ for data_origin in dataset_names:  # For all the experiments process the raw dat
     arguments = {
         'check': True,
         'data_origin': data_origin,
-        'raw_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/RawData/',
-        'processed_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/',
-        'without_outliers': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3'
+        'raw_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}RawData{slash}',
+        'processed_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}ProcessedData{slash}',
+        'without_outliers': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}ProcessedData{slash}z_score_under_3'
     }
     
     # Make sure the folders where we place the data are created already

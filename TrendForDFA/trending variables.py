@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, units, cmap
+    symbols, units, cmap, retrieve_dataframe_directory
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,8 +10,7 @@ import seaborn as sns
 from scipy.stats import linregress
 
 # Use the extra long lineages from Susman et al. 2018
-pu = pd.read_csv(r'/Users/alestawsky/PycharmProjects/Multiple Timescales in Bacterial Growth Homeostasis/Datasets/MG1655_inLB_LongTraces/ProcessedData/z_score_under_3/physical_units_without_outliers.csv').sort_values(['lineage_ID', 'generation'])
-
+pu = pd.read_csv(retrieve_dataframe_directory('MG1655_inLB_LongTraces', 'pu', False)).sort_values(['lineage_ID', 'generation'])
 
 lin_id = 14  # The illustrative lineage we will use
 
@@ -40,7 +39,7 @@ for ax, variable in zip(axes, ['length_birth', 'growth_rate', 'generationtime', 
     ax.plot(to_plot, marker='o', color=cmap[0], markersize=.8)
     ax.plot(intercept + (slope * np.arange(len(to_plot))), ls='--', color=cmap[1])
 axes[-1].set_xlabel('Generation')
-plt.savefig('dfa_trend_illustration.png', dpi=300)
-# plt.show()
+# plt.savefig('dfa_trend_illustration.png', dpi=300)
+plt.show()
 plt.close()
 

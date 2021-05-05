@@ -2,7 +2,8 @@
 
 from AnalysisCode.global_variables import (
     symbols, units, create_folder, phenotypic_variables, shuffle_lineage_generations, cmap, seaborn_preamble, sm_datasets,
-    wang_datasets, get_time_averages_df, trace_center_a_dataframe, cgsc_6300_wang_exps, shuffle_info, lexA3_wang_exps, mm_datasets, tanouchi_datasets, dataset_names, shuffle_lineage_generations
+    wang_datasets, get_time_averages_df, trace_center_a_dataframe, cgsc_6300_wang_exps, shuffle_info, lexA3_wang_exps, mm_datasets, tanouchi_datasets, dataset_names, shuffle_lineage_generations,
+    retrieve_dataframe_directory, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,8 +21,8 @@ create a dataframe that contains all the intergenerational correlations between
 
 def create_the_dataframe():
     
-    pu = pd.read_csv(r'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv').sort_values(['lineage_ID', 'generation'])
-    tc = pd.read_csv(r'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/trace_centered_without_outliers.csv').sort_values(['lineage_ID', 'generation'])
+    pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False)).sort_values(['lineage_ID', 'generation'])
+    tc = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'tc', False)).sort_values(['lineage_ID', 'generation'])
     
     corr_df = pd.DataFrame()
     
@@ -93,14 +94,14 @@ def create_the_dataframe():
                         'r': r
                     }, ignore_index=True)  # Add it to the dataframe we will save
     
-    corr_df.to_csv('/Users/alestawsky/PycharmProjects/Thesis/Figure Creation/intergenerational_df.csv', index=False)  # Save it so we do not do it again
+    corr_df.to_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}intergenerational_df.csv', index=False)  # Save it so we do not do it again
     
     
 create_the_dataframe()  # This creation takes some time! We will use the whole pooled ensemble, have patience :)
 
 print('dataframe created')
 
-corr_df = pd.read_csv('/Users/alestawsky/PycharmProjects/Thesis/Figure Creation/intergenerational_df.csv')
+corr_df = pd.read_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}intergenerational_df.csv')
 
 scale = 1.5
 

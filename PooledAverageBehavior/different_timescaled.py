@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, cmap, shuffle_info, get_time_averages_df, phenotypic_variables
+    symbols, cmap, shuffle_info, get_time_averages_df, phenotypic_variables, retrieve_dataframe_directory
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -209,11 +209,11 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
 #########################################
 
 
-pu = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
 pu.loc[:, phenotypic_variables] = pu[np.abs(pu[phenotypic_variables] - pu[phenotypic_variables].mean()) < 4*pu[phenotypic_variables].std()].reset_index()
-tc = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/trace_centered_without_outliers.csv')
+tc = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'tc', False))
 tc.loc[:, phenotypic_variables] = tc[np.abs(tc[phenotypic_variables] - tc[phenotypic_variables].mean()) < 4*tc[phenotypic_variables].std()].reset_index()
-ta = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/time_averages_without_outliers.csv').drop('generation', axis=1).drop_duplicates()
+ta = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'ta', False)).drop('generation', axis=1).drop_duplicates()
 ta['fold_growth'] = np.exp(ta['fold_growth'])
 art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates()
 art['fold_growth'] = np.exp(art['fold_growth'])

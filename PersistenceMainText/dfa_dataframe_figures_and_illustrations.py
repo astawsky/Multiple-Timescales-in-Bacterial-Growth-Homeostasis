@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, create_folder, phenotypic_variables, cmap, seaborn_preamble, sm_datasets, cgsc_6300_wang_exps, lexA3_wang_exps, mm_datasets, dataset_names, shuffle_lineage_generations
+    symbols, create_folder, phenotypic_variables, cmap, seaborn_preamble, sm_datasets, cgsc_6300_wang_exps,
+    lexA3_wang_exps, mm_datasets, dataset_names, shuffle_lineage_generations, retrieve_dataframe_directory, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -353,7 +354,7 @@ def plot_dfa_cumsum_illustration(ax):
     c = cmap[3]  # color
     
     # Physical Units dataframe
-    pu = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+    pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
     
     lin_id = 15  # ID of illustrative lineage
     rel = pu[pu['lineage_ID'] == lin_id].copy().sort_values('generation')  # lineage in generational order
@@ -464,10 +465,10 @@ def plot_loglog_lines(loglog_plot_recreation, ax):
 def plot_dfa_slopes(ax):
     se = pd.DataFrame()  # Where we will put all the scaling exponents
     
-    for ds in ['Pooled_SM', 'Maryam_LongTraces', 'Lambda_LB', 'MG1655_inLB_LongTraces']:  # Pool all these datasets into one dataframe
+    for ds in ['Pooled_SM', 'Maryam_LongTraces', 'lambda_lb', 'MG1655_inLB_LongTraces']:  # Pool all these datasets into one dataframe
         
         print(ds)
-        scaling_exponents = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/DFA/Scaling Exponents/{ds}/scaling_exponents.csv')  # Import
+        scaling_exponents = pd.read_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}{ds}{slash}scaling_exponents.csv')  # Import
         
         scaling_exponents['experiment'] = ds  # Add their dataset name
         
@@ -490,7 +491,7 @@ def plot_dfa_slopes(ax):
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-recreation = pd.read_csv(current_dir + r'/Pooled_SM/loglog_scaling_recreation.csv')
+recreation = pd.read_csv(current_dir + f'{slash}Pooled_SM{slash}loglog_scaling_recreation.csv')
 recreation = recreation.replace(to_replace={r'$f_n e^{\phi_{n}}$': r'$r$'})
 
 sns.set_context('paper', font_scale=1)

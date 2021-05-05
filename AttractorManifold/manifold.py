@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-from AnalysisCode.global_variables import dataset_names
+from AnalysisCode.global_variables import dataset_names, retrieve_dataframe_directory
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from mpl_toolkits.mplot3d import axes3d, Axes3D
     
     
 def plot_manifold(ax):
@@ -48,12 +49,12 @@ def script(variables, ax, points_are='pu'):  # can be ta
         # For each type of values append
         if points_are == 'pu':
             # Import the dataframe
-            df = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/{ds}/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')[variables]
+            df = pd.read_csv(retrieve_dataframe_directory(ds, 'pu', False))[variables]
             df = df.sample(n=min(500, len(df)), replace=False)
         else:
             # Import the dataframe
-            df = pd.read_csv(f'/Users/alestawsky/PycharmProjects/Thesis/Datasets/{ds}/ProcessedData/z_score_under_3/time_averages_without_outliers.csv')[variables].drop_duplicates()
-
+            df = pd.read_csv(retrieve_dataframe_directory(ds, 'ta', False))[variables].drop_duplicates()
+            
         # Data for a three-dimensional line
         ax.scatter3D(df['growth_rate'].values, df['generationtime'].values, df['division_ratio'].values, alpha=.2)
     
@@ -80,6 +81,6 @@ ax = fig.add_subplot(1, 2, 2, projection='3d')
 script(variables, points_are='ta', ax=ax)
 
 plt.tight_layout()
-plt.savefig('figure_manifold.png', dpi=300)
-# plt.show()
+# plt.savefig('figure_manifold.png', dpi=300)
+plt.show()
 plt.close()

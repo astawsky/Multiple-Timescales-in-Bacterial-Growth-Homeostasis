@@ -329,7 +329,7 @@ axes[0].set_ylabel(r'length $(\mu$m$)$')
 axes[0].set_xlabel(r'time $($hr$)$')
 
 # For the experiments that are in the main text
-mm_traps(['Lambda_LB', 'Maryam_LongTraces'], ax=axes[1])
+mm_traps(['lambda_lb', 'Maryam_LongTraces'], ax=axes[1])
 vd_with_trap_and_lineage(phenotypic_variables, lin_type='NL', ax=axes[2])
 
 # # For experiments that were not in the main text to show consistency
