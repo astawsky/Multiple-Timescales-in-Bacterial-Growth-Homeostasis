@@ -19,11 +19,10 @@ create a dataframe that contains all the intergenerational correlations between
 """
 
 
-def create_the_dataframe():
-    
-    pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False)).sort_values(['lineage_ID', 'generation'])
-    tc = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'tc', False)).sort_values(['lineage_ID', 'generation'])
-    
+def create_the_dataframe(**kwargs):
+    pu = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + "physical_units_without_outliers.csv").sort_values(['lineage_ID', 'generation'])
+    tc = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + "trace_centered_without_outliers.csv").sort_values(['lineage_ID', 'generation'])
+
     corr_df = pd.DataFrame()
     
     for row, var_old in enumerate(phenotypic_variables):  # We have a combination of variables
@@ -94,51 +93,52 @@ def create_the_dataframe():
                         'r': r
                     }, ignore_index=True)  # Add it to the dataframe we will save
     
-    corr_df.to_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}intergenerational_df.csv', index=False)  # Save it so we do not do it again
-    
-    
-create_the_dataframe()  # This creation takes some time! We will use the whole pooled ensemble, have patience :)
+    corr_df.to_csv(f'IntergenerationalCorrelations{slash}intergenerational_df{kwargs["noise_index"]}.csv', index=False)  # Save it so we do not do it again
 
-print('dataframe created')
 
-corr_df = pd.read_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}intergenerational_df.csv')
+def main(**kwargs):
+    create_the_dataframe(**kwargs)  # This creation takes some time! We will use the whole pooled ensemble, have patience :)
 
-scale = 1.5
+    print('dataframe created')
 
-sns.set_context('paper', font_scale=scale/2)
-sns.set_style("ticks", {'axes.grid': True})
+    corr_df = pd.read_csv(f'IntergenerationalCorrelations{slash}intergenerational_df{kwargs["noise_index"]}.csv')
 
-fig, axes = plt.subplots(len(phenotypic_variables), len(phenotypic_variables), tight_layout=True, figsize=[6.5 * scale, 6.5 * scale])
+    scale = 1.5
 
-for row, var_old in enumerate(phenotypic_variables):  # We have a combination of variables
-    for col, var_young in enumerate(phenotypic_variables):  # The combination is one young and one old variable
-        for centered in [True, False]:  # For trace-centered values and not
-            # The intergenerational correlations sorted by inter-gen distance
-            relevant = corr_df[(corr_df['centered'] == centered) & (corr_df['var_old'] == var_old) & (corr_df['var_young'] == var_young)].copy().sort_values('distance')
-            
-            # Plot the correlation per inter-gen distance
-            axes[row, col].plot(relevant['distance'].values, relevant['r'].values, color=cmap[1] if centered else cmap[0], marker='o')
-            
-            # Graphical preferences
-            axes[row, col].axhline(0, ls='-', c='k')  # corr=0
-            axes[row, col].set_ylim([-1, 1])  # via pearson correlation
-            axes[row, col].set_xticks(np.arange(0, len(relevant), 2))
-            axes[row, col].set_yticks([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1])
-            if col != 0:
-                axes[row, col].set_yticklabels('')
-            else:
-                axes[row, col].set_yticklabels([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1])
-            if row != len(phenotypic_variables)-1:
-                axes[row, col].set_xticklabels('')
-            else:
-                axes[row, col].set_xticklabels(np.arange(0, len(relevant), 2))
+    sns.set_context('paper', font_scale=scale/2)
+    sns.set_style("ticks", {'axes.grid': True})
 
-# Graphical preferences
-for ax, variable in zip(axes[len(phenotypic_variables)-1, :], phenotypic_variables):
-    ax.set_xlabel(symbols['physical_units'][variable]+r'$_{n+k}$' if variable not in ['length_birth', 'length_final'] else symbols['physical_units'][variable]+r'$_{, \, n+k}$', size='xx-large')
-for ax, variable in zip(axes[:, 0], phenotypic_variables):
-    ax.set_ylabel(symbols['physical_units'][variable]+r'$_{n}$' if variable not in ['length_birth', 'length_final'] else symbols['physical_units'][variable]+r'$_{, \, n}$', size='xx-large')
+    fig, axes = plt.subplots(len(phenotypic_variables), len(phenotypic_variables), tight_layout=True, figsize=[6.5 * scale, 6.5 * scale])
 
-plt.savefig('intergenerational_figure.png', dpi=300)
-# plt.show()
-plt.close()
+    for row, var_old in enumerate(phenotypic_variables):  # We have a combination of variables
+        for col, var_young in enumerate(phenotypic_variables):  # The combination is one young and one old variable
+            for centered in [True, False]:  # For trace-centered values and not
+                # The intergenerational correlations sorted by inter-gen distance
+                relevant = corr_df[(corr_df['centered'] == centered) & (corr_df['var_old'] == var_old) & (corr_df['var_young'] == var_young)].copy().sort_values('distance')
+
+                # Plot the correlation per inter-gen distance
+                axes[row, col].plot(relevant['distance'].values, relevant['r'].values, color=cmap[1] if centered else cmap[0], marker='o')
+
+                # Graphical preferences
+                axes[row, col].axhline(0, ls='-', c='k')  # corr=0
+                axes[row, col].set_ylim([-1, 1])  # via pearson correlation
+                axes[row, col].set_xticks(np.arange(0, len(relevant), 2))
+                axes[row, col].set_yticks([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1])
+                if col != 0:
+                    axes[row, col].set_yticklabels('')
+                else:
+                    axes[row, col].set_yticklabels([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1])
+                if row != len(phenotypic_variables)-1:
+                    axes[row, col].set_xticklabels('')
+                else:
+                    axes[row, col].set_xticklabels(np.arange(0, len(relevant), 2))
+
+    # Graphical preferences
+    for ax, variable in zip(axes[len(phenotypic_variables)-1, :], phenotypic_variables):
+        ax.set_xlabel(symbols['physical_units'][variable]+r'$_{n+k}$' if variable not in ['length_birth', 'length_final'] else symbols['physical_units'][variable]+r'$_{, \, n+k}$', size='xx-large')
+    for ax, variable in zip(axes[:, 0], phenotypic_variables):
+        ax.set_ylabel(symbols['physical_units'][variable]+r'$_{n}$' if variable not in ['length_birth', 'length_final'] else symbols['physical_units'][variable]+r'$_{, \, n}$', size='xx-large')
+
+    plt.savefig(f'IntergenerationalCorrelations{slash}intergenerational_figure{kwargs["noise_index"]}.png', dpi=300)
+    # plt.show()
+    plt.close()

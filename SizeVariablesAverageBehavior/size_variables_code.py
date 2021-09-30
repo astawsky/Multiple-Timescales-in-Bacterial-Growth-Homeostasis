@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, cmap, shuffle_info, get_time_averages_df, phenotypic_variables, retrieve_dataframe_directory
+    symbols, cmap, shuffle_info, get_time_averages_df, phenotypic_variables, retrieve_dataframe_directory, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -154,73 +154,84 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
 #########################################
 
 
-pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
-pu['fold_growth'] = np.exp(pu['fold_growth'])
-ta = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'ta', False)).drop('generation', axis=1).drop_duplicates()
-ta['fold_growth'] = np.exp(ta['fold_growth'])
-art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates()
-# art['fold_growth'] = np.exp(art['fold_growth'])
+def main(**kwargs):
 
-num = 8
+    pu = pd.read_csv(kwargs["without_outliers"]('Pooled_SM') + 'physical_units_without_outliers.csv')
+    pu['fold_growth'] = np.exp(pu['fold_growth'])
+    ta = pd.read_csv(kwargs["without_outliers"]('Pooled_SM') + 'time_averages_without_outliers.csv').drop('generation', axis=1).drop_duplicates()
+    ta['fold_growth'] = np.exp(ta['fold_growth'])
+    art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates()
+    # art['fold_growth'] = np.exp(art['fold_growth'])
 
-scale = 1.5
+    # pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
+    # pu['fold_growth'] = np.exp(pu['fold_growth'])
+    # ta = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'ta', False)).drop('generation',
+    #                                                                               axis=1).drop_duplicates()
+    # ta['fold_growth'] = np.exp(ta['fold_growth'])
+    # art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation',
+    #                                                                                axis=1).drop_duplicates()
+    # # art['fold_growth'] = np.exp(art['fold_growth'])
 
-sns.set_context('paper', font_scale=1 * scale)
-sns.set_style("ticks", {'axes.grid': False})
+    num = 8
 
-fig, axes = plt.subplots(1, 3, tight_layout=True, figsize=[6.5 * scale, 2.1 * scale])
+    scale = 1.5
 
-axes[0].set_title('A', x=-.2, fontsize='xx-large')
-axes[1].set_title('B', x=-.2, fontsize='xx-large')
-axes[2].set_title('C', x=-.2, fontsize='xx-large')
+    sns.set_context('paper', font_scale=1 * scale)
+    sns.set_style("ticks", {'axes.grid': False})
 
-# axes[0].set_xlim([1.427, 4.278])
-# axes[0].set_ylim([2.8, 7.9])
-#
-# axes[1].set_xlim([1.404, 4.221])
-# axes[1].set_ylim([.8, 4.7])
-#
-# axes[2].set_xlim([1.537, 4.328])
-# axes[2].set_ylim([1.25, 2.9])
+    fig, axes = plt.subplots(1, 3, tight_layout=True, figsize=[6.5 * scale, 2.1 * scale])
 
-kde_scatterplot_variables(
-    df=ta,
-    var1='length_birth',
-    var2='length_final',
-    num=num,
-    ax=axes[0],
-    line_func=[lambda x: 2 * x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
-    pooled=False,
-    artificial=art,
-    pu=pu
-)
+    axes[0].set_title('A', x=-.2, fontsize='xx-large')
+    axes[1].set_title('B', x=-.2, fontsize='xx-large')
+    axes[2].set_title('C', x=-.2, fontsize='xx-large')
 
-kde_scatterplot_variables(
-    df=ta,
-    var1='length_birth',
-    var2='added_length',
-    num=num,
-    ax=axes[1],
-    line_func=[lambda x: x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
-    pooled=False,
-    artificial=art,
-    pu=pu
-)
+    # axes[0].set_xlim([1.427, 4.278])
+    # axes[0].set_ylim([2.8, 7.9])
+    #
+    # axes[1].set_xlim([1.404, 4.221])
+    # axes[1].set_ylim([.8, 4.7])
+    #
+    # axes[2].set_xlim([1.537, 4.328])
+    # axes[2].set_ylim([1.25, 2.9])
 
-kde_scatterplot_variables(
-    df=ta,
-    var1='length_birth',
-    var2='fold_growth',
-    num=num,
-    ax=axes[2],
-    line_func=[lambda x: 2 * np.array([1 for _ in np.arange(len(x))])],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
-    pooled=False,
-    artificial=art,
-    sym2=r'$e^{\phi}$',
-    pu=pu
-)
+    kde_scatterplot_variables(
+        df=ta,
+        var1='length_birth',
+        var2='length_final',
+        num=num,
+        ax=axes[0],
+        line_func=[lambda x: 2 * x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
+        pooled=False,
+        artificial=art,
+        pu=pu
+    )
 
-# plt.legend()
-# plt.savefig('size_variables.png', dpi=300)
-plt.show()  # Need to adjust the axis limits manually
-plt.close()
+    kde_scatterplot_variables(
+        df=ta,
+        var1='length_birth',
+        var2='added_length',
+        num=num,
+        ax=axes[1],
+        line_func=[lambda x: x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
+        pooled=False,
+        artificial=art,
+        pu=pu
+    )
+
+    kde_scatterplot_variables(
+        df=ta,
+        var1='length_birth',
+        var2='fold_growth',
+        num=num,
+        ax=axes[2],
+        line_func=[lambda x: 2 * np.array([1 for _ in np.arange(len(x))])],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
+        pooled=False,
+        artificial=art,
+        sym2=r'$e^{\phi}$',
+        pu=pu
+    )
+
+    # plt.legend()
+    plt.savefig(f'SizeVariablesAverageBehavior{slash}size_variables{kwargs["noise_index"]}.png', dpi=300)
+    plt.show()  # Need to adjust the axis limits manually
+    plt.close()

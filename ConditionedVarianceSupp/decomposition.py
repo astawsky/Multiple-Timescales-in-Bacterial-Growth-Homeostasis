@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, phenotypic_variables, cmap, sm_datasets, shuffle_info, cgsc_6300_wang_exps, lexA3_wang_exps, tanouchi_datasets
+    symbols, phenotypic_variables, cmap, sm_datasets, shuffle_info, cgsc_6300_wang_exps, lexA3_wang_exps,
+    tanouchi_datasets, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -52,11 +53,13 @@ def shuffle_info_sm(info):
 """ vd conditioning on experiments and lineage """
 
 
-def mm_lineage_experiment(chosen_datasets, ax, loc='upper left'):
+def mm_lineage_experiment(chosen_datasets, ax, loc='upper left', **kwargs):
     total_df = pd.DataFrame()  # pool all the experiments
     for data_origin in chosen_datasets:
-        pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
-        
+        # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
+
+        pu = kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv'
+
         pu = pd.read_csv(pu)
         pu['experiment'] = data_origin
         
@@ -187,7 +190,7 @@ def mm_lineage_experiment(chosen_datasets, ax, loc='upper left'):
 """ vd conditioning on experiment, trap and lineage """
 
 
-def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='upper right'):
+def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='upper right', **kwargs):
     total_df = pd.DataFrame()  # The dataframe with all the experiments in it
 
     # Check what type of pair lineages we want to look at
@@ -204,7 +207,9 @@ def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='up
         
         # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
         
-        pu = pd.read_csv(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+        # pu = pd.read_csv(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+
+        pu = pd.read_csv(kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv')
         
         pu = pu[pu['dataset'].isin(type_of_lineages)]  # use only the pair lineages we are interested in
         
@@ -369,7 +374,7 @@ def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='up
 """ variance decomposition for MM data conditioning on traps """
 
 
-def mm_traps(chosen_datasets, ax, loc='upper left'):
+def mm_traps(chosen_datasets, ax, loc='upper left', **kwargs):
     
     # The dataframe with all the experiments in it
     total_df = pd.DataFrame()
@@ -377,7 +382,8 @@ def mm_traps(chosen_datasets, ax, loc='upper left'):
     # Pool the data from the chosen experiments
     for data_origin in chosen_datasets:
         print(data_origin)
-        pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
+        pu = kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv'
+        # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
         pu = pd.read_csv(pu)
         
         # Give them the experiment category
@@ -495,65 +501,67 @@ def mm_traps(chosen_datasets, ax, loc='upper left'):
     ax.set_ylim([0, .45])
 
 
-# The order we want them to appear in
-real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
-              symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
-              symbols['physical_units']['added_length'], '  ', '   '])
+def main(**kwargs):
 
-scale = 1.5
-sns.set_context('paper', font_scale=scale)
-sns.set_style("ticks", {'axes.grid': True})
-fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.5 * scale], tight_layout=True)
+    # The order we want them to appear in
+    real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
+                  symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
+                  symbols['physical_units']['added_length'], '  ', '   '])
 
-axes[0].set_title('A', x=-.2, fontsize='xx-large')
-axes[1].set_title('B', x=-.05, fontsize='xx-large')
-axes[2].set_title('C', x=-.05, fontsize='xx-large')
+    scale = 1.5
+    sns.set_context('paper', font_scale=scale)
+    sns.set_style("ticks", {'axes.grid': True})
+    fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.5 * scale], tight_layout=True)
 
-# For experiments that were not in the main text to show consistency
-mm_traps([tanouchi_datasets[0]], ax=axes[0])
-mm_traps([tanouchi_datasets[1]], ax=axes[1])
-mm_traps([tanouchi_datasets[2]], ax=axes[2])
-for ax in axes:
-    ax.set_ylim([0, .08])
-    # ax.set_xlim([real_order[1], real_order[-2]])
-axes[1].set_ylabel('')
-axes[2].set_ylabel('')
-axes[1].get_legend().remove()
-axes[2].get_legend().remove()
+    axes[0].set_title('A', x=-.2, fontsize='xx-large')
+    axes[1].set_title('B', x=-.05, fontsize='xx-large')
+    axes[2].set_title('C', x=-.05, fontsize='xx-large')
 
-plt.savefig('tanouchi_variance_decomposition.png', dpi=300)
-plt.show()
-plt.close()
+    # For experiments that were not in the main text to show consistency
+    mm_traps([tanouchi_datasets[0]], ax=axes[0], **kwargs)
+    mm_traps([tanouchi_datasets[1]], ax=axes[1], **kwargs)
+    mm_traps([tanouchi_datasets[2]], ax=axes[2], **kwargs)
+    for ax in axes:
+        ax.set_ylim([0, .08])
+        # ax.set_xlim([real_order[1], real_order[-2]])
+    axes[1].set_ylabel('')
+    axes[2].set_ylabel('')
+    axes[1].get_legend().remove()
+    axes[2].get_legend().remove()
 
-scale = 1.5
-sns.set_context('paper', font_scale=scale)
-sns.set_style("ticks", {'axes.grid': True})
-fig, axes = plt.subplots(1, 2, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
+    plt.savefig(f'ConditionedVarianceSupp{slash}tanouchi_variance_decomposition{kwargs["noise_index"]}.png', dpi=300)
+    # plt.show()
+    plt.close()
 
-axes[0].set_title('A', x=-.2, fontsize='xx-large')
-axes[1].set_title('B', x=-.05, fontsize='xx-large')
+    scale = 1.5
+    sns.set_context('paper', font_scale=scale)
+    sns.set_style("ticks", {'axes.grid': True})
+    fig, axes = plt.subplots(1, 2, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
 
-# For experiments that were not in the main text to show consistency
-mm_lineage_experiment(cgsc_6300_wang_exps, ax=axes[0])
-mm_lineage_experiment(lexA3_wang_exps, ax=axes[1])
-axes[1].get_legend().remove()  # Repetative
+    axes[0].set_title('A', x=-.2, fontsize='xx-large')
+    axes[1].set_title('B', x=-.05, fontsize='xx-large')
 
-plt.savefig('wang_variance_decomposition.png', dpi=300)
-plt.show()
-plt.close()
+    # For experiments that were not in the main text to show consistency
+    mm_lineage_experiment(cgsc_6300_wang_exps, ax=axes[0], **kwargs)
+    mm_lineage_experiment(lexA3_wang_exps, ax=axes[1], **kwargs)
+    axes[1].get_legend().remove()  # Repetative
 
-scale = 1.5
-sns.set_context('paper', font_scale=scale)
-sns.set_style("ticks", {'axes.grid': True})
-fig, axes = plt.subplots(1, 2, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
+    plt.savefig(f'ConditionedVarianceSupp{slash}wang_variance_decomposition{kwargs["noise_index"]}.png', dpi=300)
+    # plt.show()
+    plt.close()
 
-axes[0].set_title('A', x=-.2, fontsize='xx-large')
-axes[1].set_title('B', x=-.05, fontsize='xx-large')
+    scale = 1.5
+    sns.set_context('paper', font_scale=scale)
+    sns.set_style("ticks", {'axes.grid': True})
+    fig, axes = plt.subplots(1, 2, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
 
-# For the MM and SM experiments in the main text
-mm_lineage_experiment(['lambda_lb', 'Maryam_LongTraces'], ax=axes[0], loc='upper right')
-vd_with_trap_lineage_and_experiments(sm_datasets, phenotypic_variables, 'NL', axes[1])
+    axes[0].set_title('A', x=-.2, fontsize='xx-large')
+    axes[1].set_title('B', x=-.05, fontsize='xx-large')
 
-plt.savefig('mm_and_sm_decompositions.png', dpi=300)
-plt.show()
-plt.close()
+    # For the MM and SM experiments in the main text
+    mm_lineage_experiment(['lambda_lb', 'Maryam_LongTraces'], ax=axes[0], loc='upper right', **kwargs)
+    vd_with_trap_lineage_and_experiments(sm_datasets, phenotypic_variables, 'NL', axes[1], **kwargs)
+
+    plt.savefig(f'ConditionedVarianceSupp{slash}mm_and_sm_decompositions{kwargs["noise_index"]}.png', dpi=300)
+    # plt.show()
+    plt.close()

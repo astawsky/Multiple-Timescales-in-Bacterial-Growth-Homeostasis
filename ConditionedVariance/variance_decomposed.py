@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, phenotypic_variables, cmap, shuffle_info, check_the_division, tanouchi_datasets
+    symbols, phenotypic_variables, cmap, shuffle_info, check_the_division, tanouchi_datasets, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -53,10 +53,11 @@ def shuffle_info_sm(info):
 """ variance decomposition for SM data conditioning on trap and lineage """
 
 
-def vd_with_trap_and_lineage(variables, lin_type, ax):
+def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
     # The dataframe with all the experiments in it
-    total_df = pd.read_csv(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/Pooled_SM/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
-    
+    total_df = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + 'physical_units_without_outliers.csv')
+    # total_df = pd.read_csv(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f'/Datasets/Pooled_SM/{kwargs["noise_index"].split("_").join("_")}ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
+
     # Check what type of pair lineages we want to look at
     if lin_type == 'NL':
         type_of_lineages = ['NL']
@@ -168,7 +169,7 @@ def vd_with_trap_and_lineage(variables, lin_type, ax):
 """ variance decomposition for MM data conditioning on traps """
 
 
-def mm_traps(chosen_datasets, ax):
+def mm_traps(chosen_datasets, ax, **kwargs):
     
     # The dataframe with all the experiments in it
     total_df = pd.DataFrame()
@@ -176,7 +177,9 @@ def mm_traps(chosen_datasets, ax):
     # Pool the data from the chosen experiments
     for data_origin in chosen_datasets:
         print(data_origin)
-        pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
+        pu = kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv'
+        print(pu)
+        # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + kwargs['noise_index'].split("_").join("_") + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
         pu = pd.read_csv(pu)
         
         # Give them the experiment category
@@ -297,53 +300,54 @@ def mm_traps(chosen_datasets, ax):
 """ Illustration of cell cycle physiological variables (Needs extra work outside python) """
 
 
-def cell_cycle_illustration(ax):
+def cell_cycle_illustration(ax, **kwargs):
     data_origin = 'Pooled_SM'  # We will use cycles from this dataset
-    args = {
-        'data_origin': data_origin,
-        'raw_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/RawData/',
-        'processed_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/'
-    }
+    # args = {
+    #     'raw_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/RawData/',
+    #     'processed_data': os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/'
+    # }
     
     # From the process_rawdata.py file where it is used to visually confirm the regression as well as the division events
-    check_the_division(args, lineages=[1], raw_lineages=[], raw_indices=[], pu=[], ax=ax)
+    check_the_division(data_origin, lineages=[1], raw_lineages=[], raw_indices=[], pu=[], ax=ax, **kwargs)
 
 
-# Graphical preferences
-scale = 2
-# scale = 1.5
-sns.set_context('paper', font_scale=scale)
-sns.set_style("ticks", {'axes.grid': True})
+def main(**kwargs):
 
-fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.5 * scale], tight_layout=True)
-# fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
+    # Graphical preferences
+    scale = 2
+    # scale = 1.5
+    sns.set_context('paper', font_scale=scale)
+    sns.set_style("ticks", {'axes.grid': True})
 
-axes[0].set_title('A', x=-.2, fontsize='xx-large')
-axes[1].set_title('B', x=-.3, fontsize='xx-large')
-axes[2].set_title('C', x=-.3, fontsize='xx-large')
+    fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.5 * scale], tight_layout=True)
+    # fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 3.5 * scale], tight_layout=True)
 
-cell_cycle_illustration(axes[0])
-axes[0].set_xlim([1.48, 2.4])
-axes[0].set_ylim([2.8, 6.5])
-axes[0].set_ylabel(r'length $(\mu$m$)$')
-axes[0].set_xlabel(r'time $($hr$)$')
+    axes[0].set_title('A', x=-.2, fontsize='xx-large')
+    axes[1].set_title('B', x=-.3, fontsize='xx-large')
+    axes[2].set_title('C', x=-.3, fontsize='xx-large')
 
-# For the experiments that are in the main text
-mm_traps(['lambda_lb', 'Maryam_LongTraces'], ax=axes[1])
-vd_with_trap_and_lineage(phenotypic_variables, lin_type='NL', ax=axes[2])
+    cell_cycle_illustration(axes[0], **kwargs)
+    axes[0].set_xlim([1.48, 2.4])
+    axes[0].set_ylim([2.8, 6.5])
+    axes[0].set_ylabel(r'length $(\mu$m$)$')
+    axes[0].set_xlabel(r'time $($hr$)$')
 
-# # For experiments that were not in the main text to show consistency
-# mm_traps([tanouchi_datasets[0]], ax=axes[0])
-# mm_traps([tanouchi_datasets[1]], ax=axes[1])
-# mm_traps([tanouchi_datasets[2]], ax=axes[2])
-# for ax in axes:
-#     ax.set_ylim([0, .08])
-# axes[1].set_ylabel('')
-# axes[2].set_ylabel('')
-# axes[1].get_legend().remove()
-# axes[2].get_legend().remove()
+    # For the experiments that are in the main text
+    mm_traps(['lambda_lb', 'Maryam_LongTraces'], ax=axes[1], **kwargs)
+    vd_with_trap_and_lineage(phenotypic_variables, lin_type='NL', ax=axes[2], **kwargs)
 
-plt.tight_layout()
-plt.show()  # has to be manually adjusted to some degree
-# plt.savefig('vd_square.png', dpi=300)
-plt.close()
+    # # For experiments that were not in the main text to show consistency
+    # mm_traps([tanouchi_datasets[0]], ax=axes[0])
+    # mm_traps([tanouchi_datasets[1]], ax=axes[1])
+    # mm_traps([tanouchi_datasets[2]], ax=axes[2])
+    # for ax in axes:
+    #     ax.set_ylim([0, .08])
+    # axes[1].set_ylabel('')
+    # axes[2].set_ylabel('')
+    # axes[1].get_legend().remove()
+    # axes[2].get_legend().remove()
+
+    plt.tight_layout()
+    # plt.show()  # has to be manually adjusted to some degree
+    plt.savefig(f'{os.path.dirname(__file__)}{slash}vd_square{kwargs["noise_index"]}.png', dpi=300)
+    plt.close()

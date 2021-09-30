@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
-import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from AnalysisCode.global_variables import phenotypic_variables, symbols, get_time_averages_df, retrieve_dataframe_directory
+from AnalysisCode.global_variables import phenotypic_variables, symbols, get_time_averages_df, slash
 
 
-def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_variables, figurename='covariance decomposition, main variables', annot=True):
+def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_variables, figurename='covariance decomposition, main variables', annot=True, **kwargs):
     # Normalize the trace-centered or time-averages correlation by the pooled ensemble standard deviations
     def normalize_correlation(phys, variables):
         # The pooled mean
@@ -24,11 +23,10 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
             for param_2 in variables:
                 if param_1 in memory:
                     continue
-                else:
-                    print(param_1, param_2)
+                # else:
+                #     print(param_1, param_2)
                 
                 normalization = (phys[param_1].std(ddof=1) * phys[param_2].std(ddof=1))
-                # print('normalization', normalization)
                 
                 # The two components in the decomposition
                 total = np.array([])
@@ -39,9 +37,7 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
                     l_cond = (phys['lineage_ID'] == lin_id)  # Condition that they are in the same experiment and lineage
                     # The masked dataframe that contains bacteria in the same lineage and experiment
                     lin = phys[l_cond].copy()[[param_1, param_2]].dropna().reset_index(drop=True) if param_1 != param_2 else phys[l_cond].copy()[param_1].dropna().reset_index(drop=True)
-                    
-                    # print('lin', lin, type(lin))
-                
+
                     # Add the components
                     if param_1 != param_2:
                         total = np.append(total, (lin[param_1] - pooled_pu_mean[param_1]).values * (lin[param_2] - pooled_pu_mean[param_2]))
@@ -77,25 +73,6 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
                 ta_corr_df.rename(columns=symbols['time_averages'], index=symbols['time_averages']),
                 tc_corr_df.rename(columns=symbols['trace_centered'], index=symbols['trace_centered'])]
     
-    # # Normalize the trace-centered or time-averages correlation by the pooled ensemble standard deviations
-    # def normalize_correlation(df, variables):
-    #     cov = df.cov(ddof=0)
-    #     # cov = df.cov()
-    #     corr_df = pd.DataFrame(columns=variables, index=variables, dtype=float)
-    #     for param_1 in variables:
-    #         for param_2 in variables:
-    #             normalization = (pu[param_1].std(ddof=0) * pu[param_2].std(ddof=0))
-    #
-    #             # # If the value lies in the noise range then make it zero
-    #             # if -.1 < cov.loc[param_1, param_2] / normalization < .1:
-    #             #     corr_df.loc[param_1, param_2] = float('nan')  # 0
-    #             # else:
-    #             #     corr_df.loc[param_1, param_2] = cov.loc[param_1, param_2] / normalization
-    #             corr_df.loc[param_1, param_2] = cov.loc[param_1, param_2] / normalization
-    #             # corr_df.loc[param_1, param_2] = np.round(cov.loc[param_1, param_2] / normalization, 2)
-    #
-    #     return corr_df
-    
     # The bounds for the color in the heatmap. Given from the bounds of the pearson correlation
     vmax, vmin = 1, -1
 
@@ -123,25 +100,25 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
     axes[2].set_title('C', x=-.2, fontsize='xx-large')
     
     fig.tight_layout(rect=[0, 0, .9, 1])
-    plt.savefig(f'{figurename}.png', dpi=300)
-    plt.show()
+    plt.savefig(f'CovarianceDecomposition{slash}{figurename}{kwargs["noise_index"]}.png', dpi=300)
+    # plt.show()
     plt.close()
 
-    
-# The variables we want to plot
-variables = ['div_and_fold', 'fold_growth', 'division_ratio', 'generationtime', 'length_birth', 'growth_rate']
 
-# The pooled sister machine data in physical units, time-averages and trace-centered
-pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
-ta = get_time_averages_df(pu, phenotypic_variables)
-tc = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'tc', False))
+def main(**kwargs):
+    # The variables we want to plot
+    variables = ['div_and_fold', 'fold_growth', 'division_ratio', 'generationtime', 'length_birth', 'growth_rate']
 
-# Graphical preferences
-scale = 1.5
-sns.set_context('paper', font_scale=.7 * scale)
-sns.set_style("ticks", {'axes.grid': False})
-fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.1 * scale])
+    # The pooled sister machine data in physical units, time-averages and trace-centered
+    pu = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + '/physical_units_without_outliers.csv')
+    ta = get_time_averages_df(pu, phenotypic_variables)
+    tc = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + '/trace_centered_without_outliers.csv')
 
-# Plot the pyramid covariances
-pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=variables, figurename='covariance decomposition', annot=True)
+    # Graphical preferences
+    scale = 1.5
+    sns.set_context('paper', font_scale=.7 * scale)
+    sns.set_style("ticks", {'axes.grid': False})
+    fig, axes = plt.subplots(1, 3, figsize=[6.5 * scale, 2.1 * scale])
 
+    # Plot the pyramid covariances
+    pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=variables, figurename='covariance decomposition', annot=True, **kwargs)

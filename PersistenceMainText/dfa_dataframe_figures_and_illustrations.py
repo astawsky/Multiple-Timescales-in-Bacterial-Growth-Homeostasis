@@ -90,22 +90,24 @@ def dfa_short(lineage, min_ws, max_ws=None, window_size_steps=5, steps_between_w
     return [window_sizes, mse_array, slope, intercept, std_err]
 
 
-def plot_histograms_of_scaling_exponents(figure_folder, histogram_of_regression):
+def plot_histograms_of_scaling_exponents(figure_folder, histogram_of_regression, **kwargs):
+
     # Histogram of H of every kind
     for kind in histogram_of_regression.kind.unique():
         seaborn_preamble()
         fig, ax = plt.subplots(tight_layout=True, figsize=[5, 5])
         plt.axhline(.5, ls='-', c='k', linewidth=1, zorder=1)
-        
+        # TODO: change all instances of dfa to have the blue bars first like at the bottom here
         sns.pointplot(data=histogram_of_regression[histogram_of_regression['kind'] == kind], x='variable', y='slope', hue='dataset', order=[symbols['physical_units'][v] for v in phenotypic_variables],
-                      join=False, dodge=True, capsize=.5)  # , capthick=1
+                      join=False, dodge=True, capsize=.5, hue_order=['Shuffled', 'Trace'],
+                      palette={'Shuffled': sns.color_palette('tab10')[1], 'Trace': sns.color_palette('tab10')[0]})  # , capthick=1
         # sns.boxplot(data=histogram_of_regression[histogram_of_regression['kind'] == kind], x='variable', y='slope', hue='dataset', order=[symbols['physical_units'][v] for v in phenotypic_variables],
         #             showfliers=False)
         plt.legend(title='')
         # plt.title(kind)
         plt.ylabel('')
         plt.xlabel('')
-        plt.savefig('{}/{}.png'.format(figure_folder, kind), dpi=300)
+        plt.savefig(f'{figure_folder}{slash}{kind}{kwargs["noise_index"]}.png', dpi=300)
         # plt.show()
         plt.close()
 
@@ -224,7 +226,7 @@ def recreate_loglog_plots(loglog_plot_recreation, figure_folder, individuals=Fal
     # plt.scatter(window_sizes, y_to_regress, color='blue')
 
 
-def get_the_dfa_dataframe(args):
+def get_the_dfa_dataframe(args, **kwargs):
     # Hyper parameters
     min_ws = 5
     max_ws = None
@@ -293,11 +295,11 @@ def get_the_dfa_dataframe(args):
                         raise IOError('loglog_plot_recreation.isnull().values.any()')
     
     # Save them
-    histogram_of_regression.to_csv('{}/scaling_exponents.csv'.format(args['Scaling_Exponents']), index=False)
-    loglog_plot_recreation.to_csv('{}/loglog_scaling_recreation.csv'.format(args['LogLog_Recreation']), index=False)
+    histogram_of_regression.to_csv(f'{args["Scaling_Exponents"]}{slash}scaling_exponents{kwargs["noise_index"]}.csv', index=False)
+    loglog_plot_recreation.to_csv(f'{args["LogLog_Recreation"]}{slash}loglog_scaling_recreation{kwargs["noise_index"]}.csv', index=False)
 
 
-def create_dfa_dataframe():
+def create_dfa_dataframe(**kwargs):
     
     # experimental_groups = {
     #     # '(Tanouchi 2015) 37C': pool_experiments(['MC4100_37C (Tanouchi 2015)'], '(Tanouchi 2015) 37C', outliers=True),
@@ -317,11 +319,11 @@ def create_dfa_dataframe():
         
         print(data_origin)
         
-        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # current_dir = 'PersistenceMainText'  # os.path.dirname(os.path.abspath(__file__))
         
-        create_folder(current_dir + '/' + data_origin)
+        create_folder(f'PersistenceMainText{slash}{data_origin}')
         
-        processed_data = os.path.dirname(current_dir) + '/Datasets/' + data_origin + '/ProcessedData/'
+        # processed_data = os.path.dirname(current_dir) + '/Datasets/' + data_origin + '/ProcessedData/'
         
         """
         data_origin ==> Name of the dataset we are analysing
@@ -332,29 +334,29 @@ def create_dfa_dataframe():
         args = {
             'data_origin': data_origin,
             # Data singularities, long traces with significant filamentation, sudden drop-offs
-            'Scaling_Exponents': current_dir + '/' + data_origin,
-            'LogLog_Recreation': current_dir + '/' + data_origin,
+            'Scaling_Exponents': f'PersistenceMainText{slash}{data_origin}',
+            'LogLog_Recreation': f'PersistenceMainText{slash}{data_origin}',
             # 'dataframes': current_dir + '/Dataframes/' + data_origin,
-            'pu': processed_data + '/physical_units.csv'
+            'pu': kwargs['processed_data'](data_origin) + 'physical_units.csv'  # processed_data + '/physical_units.csv'
         }
         
-        get_the_dfa_dataframe(args)
+        get_the_dfa_dataframe(args, **kwargs)
         
         df = pd.read_csv('{}/scaling_exponents.csv'.format(args['Scaling_Exponents']))
         
-        plot_histograms_of_scaling_exponents(args['Scaling_Exponents'], df)
+        plot_histograms_of_scaling_exponents(args['Scaling_Exponents'], df, **kwargs)
         
         # df = pd.read_csv('{}/loglog_scaling_recreation.csv'.format(args['LogLog_Recreation']))
         #
         # recreate_loglog_plots(df, args['LogLog_Recreation'], individuals=False)
 
     
-    
-def plot_dfa_cumsum_illustration(ax):
+def plot_dfa_cumsum_illustration(ax, **kwargs):
     c = cmap[3]  # color
     
     # Physical Units dataframe
-    pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
+    pu = pd.read_csv(kwargs["without_outliers"]('Pooled_SM') + 'physical_units_without_outliers.csv')
+    # pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
     
     lin_id = 15  # ID of illustrative lineage
     rel = pu[pu['lineage_ID'] == lin_id].copy().sort_values('generation')  # lineage in generational order
@@ -462,14 +464,15 @@ def plot_loglog_lines(loglog_plot_recreation, ax):
     # ax.legend(title='', loc='upper left')
 
 
-def plot_dfa_slopes(ax):
+def plot_dfa_slopes(ax, **kwargs):
     se = pd.DataFrame()  # Where we will put all the scaling exponents
     
     for ds in ['Pooled_SM', 'Maryam_LongTraces', 'lambda_lb', 'MG1655_inLB_LongTraces']:  # Pool all these datasets into one dataframe
         
         print(ds)
-        scaling_exponents = pd.read_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}{ds}{slash}scaling_exponents.csv')  # Import
-        
+        scaling_exponents = pd.read_csv(f'PersistenceMainText{slash}{ds}{slash}scaling_exponents{kwargs["noise_index"]}.csv')  # Import
+        # scaling_exponents = pd.read_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}{ds}{slash}scaling_exponents.csv')  # Import
+
         scaling_exponents['experiment'] = ds  # Add their dataset name
         
         se = se.append(scaling_exponents, ignore_index=True)  # Append them
@@ -477,8 +480,11 @@ def plot_dfa_slopes(ax):
     se = se.replace({'$f_n e^{\phi_{n}}$': r'$r$'})  # Use the latex variable names
     
     plt.axhline(0.5, ls='-', c='k')  # Plot a black like to show what random processes should be like
-    sns.pointplot(data=se, x='variable', y='slope', hue='dataset', join=False, dodge=True, palette=cmap, capsize=.1, ax=ax, ci="sd", zorder=100,
-                  order=['$\\alpha$', '$\\tau$', '$\\phi$', '$f$', '$r$', '$x_0$', '$\\Delta$'])  # The error bars
+    sns.pointplot(data=se, x='variable', y='slope', hue='dataset', join=False, dodge=True, capsize=.1,
+                  ax=ax, ci="sd", zorder=100,
+                  order=['$\\alpha$', '$\\tau$', '$\\phi$', '$f$', '$r$', '$x_0$', '$\\Delta$'],
+                  hue_order=['Shuffled', 'Trace'],
+                  palette={'Shuffled': sns.color_palette('tab10')[1], 'Trace': sns.color_palette('tab10')[0]})  # The error bars
     ax.set_ylabel(r'$\gamma$')
     ax.set_xlabel('')
     # ax.legend(title='', fontsize='small', markerscale=.5)
@@ -486,25 +492,29 @@ def plot_dfa_slopes(ax):
     plt.ylim([0, 1.2])
     
 
-# # To calculate the dataframe with the correct analysis
-# create_dfa_dataframe()
+def main(**kwargs):
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
+    # # To calculate the dataframe with the correct analysis
+    # create_dfa_dataframe(**kwargs)
 
-recreation = pd.read_csv(current_dir + f'{slash}Pooled_SM{slash}loglog_scaling_recreation.csv')
-recreation = recreation.replace(to_replace={r'$f_n e^{\phi_{n}}$': r'$r$'})
+    # current_dir = os.path.dirname(os.path.abspath(__file__))
 
-sns.set_context('paper', font_scale=1)
-sns.set_style("ticks", {'axes.grid': True})
-fig, axes = plt.subplots(1, 3, figsize=[6.5, 2.9], tight_layout=True)
+    # recreation = pd.read_csv(current_dir + f'{slash}Pooled_SM{slash}loglog_scaling_recreation.csv')
 
-axes[0].set_title('A', x=-.1, fontsize='xx-large')
-axes[1].set_title('B', x=-.12, fontsize='xx-large')
-axes[2].set_title('C', x=-.18, fontsize='xx-large')
+    recreation = pd.read_csv(f'PersistenceMainText{slash}Pooled_SM{slash}loglog_scaling_recreation{kwargs["noise_index"]}.csv')
+    recreation = recreation.replace(to_replace={r'$f_n e^{\phi_{n}}$': r'$r$'})
 
-plot_dfa_cumsum_illustration(axes[0])
-plot_loglog_lines(recreation[recreation['kind'] == 'dfa (short)'], axes[1])
-plot_dfa_slopes(axes[2])
-plt.savefig('dfa_figure.png', dpi=500)
-# plt.show()
-plt.close()
+    sns.set_context('paper', font_scale=1)
+    sns.set_style("ticks", {'axes.grid': True})
+    fig, axes = plt.subplots(1, 3, figsize=[6.5, 2.9], tight_layout=True)
+
+    axes[0].set_title('A', x=-.1, fontsize='xx-large')
+    axes[1].set_title('B', x=-.12, fontsize='xx-large')
+    axes[2].set_title('C', x=-.18, fontsize='xx-large')
+
+    plot_dfa_cumsum_illustration(axes[0], **kwargs)
+    plot_loglog_lines(recreation[recreation['kind'] == 'dfa (short)'], axes[1])
+    plot_dfa_slopes(axes[2], **kwargs)
+    plt.savefig(f'PersistenceMainText{slash}dfa_figure{kwargs["noise_index"]}.png', dpi=500)
+    # plt.show()
+    plt.close()

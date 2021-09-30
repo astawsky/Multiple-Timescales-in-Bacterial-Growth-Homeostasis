@@ -490,33 +490,35 @@ def pool_experiments(group, name, outliers=True, dimensions='pu'):
 """ check the precision of the division events and growth fits """
 
 
-def check_the_division(args, lineages=[], raw_lineages=[], raw_indices=[], pu=[], ax=[]):
+def check_the_division(data_origin_name, lineages=[], raw_lineages=[], raw_indices=[], pu=[], ax=[], **kwargs):
     import matplotlib.pyplot as plt
     
     # lineage, cycle_variables_lineage, start_indices, end_indices, raw_lineage, non_positives, singularities, rises, raw_start, raw_end, step_size, total_nans
     
     # For each experiment we have their time step (step size)
-    if args['data_origin'] == 'MG1655_inLB_LongTraces':
+    if data_origin_name == 'MG1655_inLB_LongTraces':
         step_size = 5 / 60
-    elif args['data_origin'] == 'Maryam_LongTraces':
+    elif data_origin_name == 'Maryam_LongTraces':
         step_size = 3 / 60
-    elif args['data_origin'] in tanouchi_datasets:
+    elif data_origin_name in tanouchi_datasets:
         step_size = 1 / 60
-    elif args['data_origin'] in wang_datasets:
+    elif data_origin_name in wang_datasets:
         step_size = 1 / 60
-    elif args['data_origin'] in sm_datasets:
+    elif data_origin_name in sm_datasets:
         step_size = 3 / 60
-    elif args['data_origin'] == 'lambda_lb':
+    elif data_origin_name == 'lambda_lb':
         step_size = 6 / 60
     else:
+        print(data_origin_name)
         raise IOError('This code is not meant to run the data inputted. Please label the data and put it in as an if-statement.')
     
     if len(raw_lineages) == 0:
-        raw_lineages = pd.read_csv(os.path.dirname(os.path.dirname(args['processed_data'])) + '/raw_data_all_in_one.csv')
+        print(kwargs)
+        raw_lineages = pd.read_csv(os.path.dirname(os.path.dirname(kwargs['processed_data'](data_origin_name))) + '/raw_data_all_in_one.csv')
     if len(raw_indices) == 0:
-        raw_indices = pd.read_csv(args['processed_data'] + 'raw_indices_processing.csv')
+        raw_indices = pd.read_csv(kwargs['processed_data'](data_origin_name) + 'raw_indices_processing.csv')
     if len(pu) == 0:
-        pu = pd.read_csv(args['processed_data'] + 'z_score_under_3/physical_units_without_outliers.csv')
+        pu = pd.read_csv(kwargs['without_outliers'](data_origin_name) + 'physical_units_without_outliers.csv')
     if len(lineages) == 0:
         lineages = raw_lineages.lineage_ID.unique()
     

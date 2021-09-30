@@ -7,13 +7,12 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 import seaborn as sns
 from AnalysisCode.global_variables import (
-    phenotypic_variables, create_folder, symbols, units, dataset_names, get_time_averages_df, sm_datasets, wang_datasets, cmap, cut_uneven_pairs, trace_center_a_dataframe
+    phenotypic_variables, create_folder, symbols, units, dataset_names, slash, get_time_averages_df, sm_datasets, wang_datasets, cmap, cut_uneven_pairs, trace_center_a_dataframe
 )
-import os
 
 
-def main(args):
-    def put_all_graphs_into_a_big_grid(df, label, a_lins, b_lins, variables=phenotypic_variables, suffix=''):
+def run_it(args, **kwargs):
+    def put_all_graphs_into_a_big_grid(df, label, a_lins, b_lins, variables=phenotypic_variables, suffix='', **kwargs):
         
         # Graphical Preferences
         sns.set_context('paper')
@@ -82,7 +81,7 @@ def main(args):
                     ax.set_yticklabels([])
         
         plt.tight_layout(pad=.5)
-        plt.savefig('{}{}.png'.format(label, suffix), dpi=300)
+        plt.savefig(f'PairTimescaleCorrelations{slash}{label}{suffix}{kwargs["noise_index"]}.png', dpi=300)
         # plt.show()
         plt.close()
     
@@ -99,33 +98,36 @@ def main(args):
     
     # Plot all the variables -- Scatter Regression Plot
     print('pu')
-    put_all_graphs_into_a_big_grid(physical_units, 'physical_units', a_lin_ids, b_lin_ids, variables=phenotypic_variables, suffix='')
+    put_all_graphs_into_a_big_grid(physical_units, 'physical_units', a_lin_ids, b_lin_ids, variables=phenotypic_variables, suffix='', **kwargs)
     print('tc')
-    put_all_graphs_into_a_big_grid(trace_centered, 'trace_centered', a_lin_ids, b_lin_ids, variables=phenotypic_variables, suffix='')
+    put_all_graphs_into_a_big_grid(trace_centered, 'trace_centered', a_lin_ids, b_lin_ids, variables=phenotypic_variables, suffix='', **kwargs)
     print('unique ta')
-    put_all_graphs_into_a_big_grid(time_averages, 'time_averages', a_lin_ids, b_lin_ids, variables=phenotypic_variables, suffix='')
+    put_all_graphs_into_a_big_grid(time_averages, 'time_averages', a_lin_ids, b_lin_ids, variables=phenotypic_variables, suffix='', **kwargs)
 
-    
-data_origin = 'Pooled_SM'  # Only sister machine data has the format for this analysis
 
-filepath = os.path.dirname(os.path.abspath(__file__))
+def main(**kwargs):
 
-processed_data = os.path.dirname(filepath) + '/Datasets/' + data_origin + '/ProcessedData/'
+    data_origin = 'Pooled_SM'  # Only sister machine data has the format for this analysis
 
-"""
-data_origin ==> Name of the dataset we are analysing
-raw_data ==> Where the folder containing the raw data for this dataset is
-processed_data ==> The folder we will put the processed data in
-"""
-args = {
-    'data_origin': data_origin,
-    'MM': False if data_origin in sm_datasets else True,
-    # Data singularities, long traces with significant filamentation, sudden drop-offs
-    'Figures': filepath + '/Figures',
-    'pu': processed_data + 'z_score_under_3/physical_units_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'physical_units.csv',
-    'tc': processed_data + 'z_score_under_3/trace_centered_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'trace_centered.csv'
-}
+    # filepath = os.path.dirname(os.path.abspath(__file__))
 
-main(args)
+    # processed_data = os.path.dirname(filepath) + '/Datasets/' + data_origin + '/ProcessedData/'
 
-print('*' * 200)
+    """
+    data_origin ==> Name of the dataset we are analysing
+    raw_data ==> Where the folder containing the raw data for this dataset is
+    processed_data ==> The folder we will put the processed data in
+    """
+    args = {
+        'data_origin': data_origin,
+        'MM': False if data_origin in sm_datasets else True,
+        # Data singularities, long traces with significant filamentation, sudden drop-offs
+        'Figures': 'Figures',
+        # 'Figures': filepath + '/Figures',
+        'pu': kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv' if data_origin in wang_datasets else kwargs['processed_data'](data_origin) + 'physical_units.csv',
+        'tc': kwargs['without_outliers'](data_origin) + 'trace_centered_without_outliers.csv' if data_origin in wang_datasets else kwargs['processed_data'](data_origin) + 'trace_centered.csv'
+        # 'pu': processed_data + 'z_score_under_3/physical_units_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'physical_units.csv',
+        # 'tc': processed_data + 'z_score_under_3/trace_centered_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'trace_centered.csv'
+    }
+
+    run_it(args, **kwargs)

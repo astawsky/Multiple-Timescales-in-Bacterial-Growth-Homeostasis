@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-from AnalysisCode.global_variables import dataset_names, retrieve_dataframe_directory
+from AnalysisCode.global_variables import dataset_names, retrieve_dataframe_directory, slash
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from mpl_toolkits.mplot3d import axes3d, Axes3D
+import os
+# from mpl_toolkits.mplot3d import axes3d, Axes3D
     
     
 def plot_manifold(ax):
@@ -33,7 +34,7 @@ def plot_perfect_line(ax):
     ax.plot3D(gr_domain, gt_domain, y, color='black', alpha=1, zorder=200)  # , zorder=10000
     
     
-def script(variables, ax, points_are='pu'):  # can be ta
+def script(variables, ax, points_are='pu', **kwargs):  # can be ta
     ax.set_xlim([0, 3])
     ax.set_ylim([2.5, 0])
     # ax.set_zlim([1, 0])
@@ -42,7 +43,7 @@ def script(variables, ax, points_are='pu'):  # can be ta
     plot_perfect_line(ax)  # Line of f=1/2 and \phi=ln(2)
     
     # Pool all the different experiments together and categorize them by experiment
-    for ds in dataset_names:
+    for ds in kwargs['ds_names']:
         if ds == 'Pooled_SM':  # For each experiment independently
             continue
         
@@ -63,24 +64,26 @@ def script(variables, ax, points_are='pu'):  # can be ta
     ax.set_xlabel(r'$\alpha$')
     
 
-# The variables of the 3D manifold
-variables = ['growth_rate', 'generationtime', 'division_ratio']
+def main(**kwargs):
 
-# stylistic parameters and actions
-scale = 1
-sns.set_context('paper', font_scale=scale)
-sns.set_style("ticks", {'axes.grid': True})
+    # The variables of the 3D manifold
+    variables = ['growth_rate', 'generationtime', 'division_ratio']
 
-fig = plt.figure(figsize=[6.5 * scale, 3 * scale])  # , tight_layout=True
-ax = fig.add_subplot(1, 2, 1, projection='3d')
-script(variables, points_are='pu', ax=ax)
+    # stylistic parameters and actions
+    scale = 1
+    sns.set_context('paper', font_scale=scale)
+    sns.set_style("ticks", {'axes.grid': True})
 
-# set up the axes for the second plot
-ax = fig.add_subplot(1, 2, 2, projection='3d')
+    fig = plt.figure(figsize=[6.5 * scale, 3 * scale])  # , tight_layout=True
+    ax = fig.add_subplot(1, 2, 1, projection='3d')
+    script(variables, points_are='pu', ax=ax, **kwargs)
 
-script(variables, points_are='ta', ax=ax)
+    # set up the axes for the second plot
+    ax = fig.add_subplot(1, 2, 2, projection='3d')
 
-plt.tight_layout()
-# plt.savefig('figure_manifold.png', dpi=300)
-plt.show()
-plt.close()
+    script(variables, points_are='ta', ax=ax, **kwargs)
+
+    plt.tight_layout()
+    plt.savefig(f'{os.path.dirname(__file__)}{slash}figure_manifold{kwargs["noise_index"]}.png', dpi=300)
+    # plt.show()
+    plt.close()

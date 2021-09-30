@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, cmap, shuffle_info, get_time_averages_df, phenotypic_variables, retrieve_dataframe_directory
+    symbols, cmap, shuffle_info, get_time_averages_df, phenotypic_variables, retrieve_dataframe_directory, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -209,119 +209,134 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
 #########################################
 
 
-pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
-pu.loc[:, phenotypic_variables] = pu[np.abs(pu[phenotypic_variables] - pu[phenotypic_variables].mean()) < 4*pu[phenotypic_variables].std()].reset_index()
-tc = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'tc', False))
-tc.loc[:, phenotypic_variables] = tc[np.abs(tc[phenotypic_variables] - tc[phenotypic_variables].mean()) < 4*tc[phenotypic_variables].std()].reset_index()
-ta = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'ta', False)).drop('generation', axis=1).drop_duplicates()
-ta['fold_growth'] = np.exp(ta['fold_growth'])
-art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates()
-art['fold_growth'] = np.exp(art['fold_growth'])
+def main(**kwargs):
 
-num = 10
+    # pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
+    # pu.loc[:, phenotypic_variables] = pu[np.abs(pu[phenotypic_variables] - pu[phenotypic_variables].mean()) < 4*pu[phenotypic_variables].std()].reset_index()
+    # tc = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'tc', False))
+    # tc.loc[:, phenotypic_variables] = tc[np.abs(tc[phenotypic_variables] - tc[phenotypic_variables].mean()) < 4*tc[phenotypic_variables].std()].reset_index()
+    # ta = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'ta', False)).drop('generation', axis=1).drop_duplicates()
+    # ta['fold_growth'] = np.exp(ta['fold_growth'])
+    # art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates()
+    # art['fold_growth'] = np.exp(art['fold_growth'])
 
-scale = 1.5
+    pu = pd.read_csv(kwargs["without_outliers"]('Pooled_SM') + 'physical_units_without_outliers.csv')
+    pu.loc[:, phenotypic_variables] = pu[np.abs(pu[phenotypic_variables] - pu[phenotypic_variables].mean()) < 4 * pu[
+        phenotypic_variables].std()].reset_index()
+    tc = pd.read_csv(kwargs["without_outliers"]('Pooled_SM') + 'trace_centered_without_outliers.csv')
+    tc.loc[:, phenotypic_variables] = tc[np.abs(tc[phenotypic_variables] - tc[phenotypic_variables].mean()) < 4 * tc[
+        phenotypic_variables].std()].reset_index()
+    ta = pd.read_csv(kwargs["without_outliers"]('Pooled_SM') + 'time_averages_without_outliers.csv').drop('generation',
+                                                                                  axis=1).drop_duplicates()
+    ta['fold_growth'] = np.exp(ta['fold_growth'])
+    art = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation',
+                                                                                   axis=1).drop_duplicates()
+    art['fold_growth'] = np.exp(art['fold_growth'])
 
-sns.set_context('paper', font_scale=1 * scale)
-sns.set_style("ticks", {'axes.grid': False})
+    num = 10
 
-fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[6.5 * scale, 4.2 * scale])
+    scale = 1.5
 
-axes[0, 0].set_title('A', x=-.2, fontsize='xx-large')
-axes[0, 1].set_title('B', x=-.2, fontsize='xx-large')
-axes[0, 2].set_title('C', x=-.2, fontsize='xx-large')
-axes[1, 0].set_title('D', x=-.2, fontsize='xx-large')
-axes[1, 1].set_title('E', x=-.2, fontsize='xx-large')
-axes[1, 2].set_title('F', x=-.2, fontsize='xx-large')
+    sns.set_context('paper', font_scale=1 * scale)
+    sns.set_style("ticks", {'axes.grid': False})
 
-# axes[0].set_xlim([1.427, 4.278])
-# axes[0].set_ylim([2.8, 7.9])
-#
-# axes[1].set_xlim([1.404, 4.221])
-# axes[1].set_ylim([.8, 4.7])
-#
-# axes[2].set_xlim([1.537, 4.328])
-# axes[2].set_ylim([1.25, 2.9])
+    fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[6.5 * scale, 4.2 * scale])
 
-plots_physical_units(
-    df=ta,
-    var1='length_birth',
-    var2='growth_rate',
-    num=num,
-    ax=axes[0, 0],
-    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
-    pooled=False,
-    artificial=art,
-    pu=pu
-)
+    axes[0, 0].set_title('A', x=-.2, fontsize='xx-large')
+    axes[0, 1].set_title('B', x=-.2, fontsize='xx-large')
+    axes[0, 2].set_title('C', x=-.2, fontsize='xx-large')
+    axes[1, 0].set_title('D', x=-.2, fontsize='xx-large')
+    axes[1, 1].set_title('E', x=-.2, fontsize='xx-large')
+    axes[1, 2].set_title('F', x=-.2, fontsize='xx-large')
 
-plots_physical_units(
-    df=ta,
-    var1='length_birth',
-    var2='generationtime',
-    num=num,
-    ax=axes[0, 1],
-    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
-    pooled=False,
-    artificial=art,
-    pu=pu
-)
+    # axes[0].set_xlim([1.427, 4.278])
+    # axes[0].set_ylim([2.8, 7.9])
+    #
+    # axes[1].set_xlim([1.404, 4.221])
+    # axes[1].set_ylim([.8, 4.7])
+    #
+    # axes[2].set_xlim([1.537, 4.328])
+    # axes[2].set_ylim([1.25, 2.9])
 
-plots_physical_units(
-    df=ta,
-    var1='length_birth',
-    var2='division_ratio',
-    num=num,
-    ax=axes[0, 2],
-    line_func=[],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
-    pooled=False,
-    artificial=art,
-    pu=pu
-)
+    plots_physical_units(
+        df=ta,
+        var1='length_birth',
+        var2='growth_rate',
+        num=num,
+        ax=axes[0, 0],
+        line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
+        pooled=False,
+        artificial=art,
+        pu=pu
+    )
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    plots_physical_units(
+        df=ta,
+        var1='length_birth',
+        var2='generationtime',
+        num=num,
+        ax=axes[0, 1],
+        line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
+        pooled=False,
+        artificial=art,
+        pu=pu
+    )
 
-plots_trace_centered(
-    df=ta,
-    var1='length_birth',
-    var2='growth_rate',
-    num=num,
-    ax=axes[1, 0],
-    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
-    pooled=False,
-    artificial=art,
-    pu=tc
-)
+    plots_physical_units(
+        df=ta,
+        var1='length_birth',
+        var2='division_ratio',
+        num=num,
+        ax=axes[0, 2],
+        line_func=[],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
+        pooled=False,
+        artificial=art,
+        pu=pu
+    )
 
-plots_trace_centered(
-    df=ta,
-    var1='length_birth',
-    var2='generationtime',
-    num=num,
-    ax=axes[1, 1],
-    line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
-    pooled=False,
-    artificial=art,
-    pu=tc
-)
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-plots_trace_centered(
-    df=ta,
-    var1='length_birth',
-    var2='division_ratio',
-    num=num,
-    ax=axes[1, 2],
-    line_func=[],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
-    pooled=False,
-    artificial=art,
-    pu=tc
-)
+    plots_trace_centered(
+        df=ta,
+        var1='length_birth',
+        var2='growth_rate',
+        num=num,
+        ax=axes[1, 0],
+        line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None,
+        pooled=False,
+        artificial=art,
+        pu=tc
+    )
 
-# handles = [mpatches.Patch(color=cmap[0], label='Trace'), mpatches.Patch(color=cmap[1], label='Artificial')]
-# handles, labels = axes[0, 0].get_legend_handles_labels()
-# axes[0, 0].legend(handles, labels, markerscale=.5)
+    plots_trace_centered(
+        df=ta,
+        var1='length_birth',
+        var2='generationtime',
+        num=num,
+        ax=axes[1, 1],
+        line_func=[],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, lambda x: x - (np.nanmean(x) * (-1 + np.exp(pu['fold_growth'].mean())))/2
+        pooled=False,
+        artificial=art,
+        pu=tc
+    )
 
-# plt.legend()
-plt.savefig('average_vs_pooled_behavior_1.png', dpi=300)
-plt.show()
-plt.close()
+    plots_trace_centered(
+        df=ta,
+        var1='length_birth',
+        var2='division_ratio',
+        num=num,
+        ax=axes[1, 2],
+        line_func=[],  # lambda x: np.nanmean(pu['fold_growth'].values) * np.array([1 for _ in np.arange(len(x))])
+        pooled=False,
+        artificial=art,
+        pu=tc
+    )
+
+    # handles = [mpatches.Patch(color=cmap[0], label='Trace'), mpatches.Patch(color=cmap[1], label='Artificial')]
+    # handles, labels = axes[0, 0].get_legend_handles_labels()
+    # axes[0, 0].legend(handles, labels, markerscale=.5)
+
+    # plt.legend()
+    plt.savefig(f'PooledAverageBehavior{slash}average_vs_pooled_behavior_1{kwargs["noise_index"]}.png', dpi=300)
+    plt.show()
+    plt.close()

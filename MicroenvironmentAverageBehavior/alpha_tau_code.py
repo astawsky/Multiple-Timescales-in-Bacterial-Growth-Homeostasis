@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 from AnalysisCode.global_variables import (
-    symbols, cmap, shuffle_info, phenotypic_variables, get_time_averages_df, retrieve_dataframe_directory
+    symbols, cmap, shuffle_info, phenotypic_variables, get_time_averages_df, slash
 )
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -54,7 +54,7 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
     df = df[df['max_gen'] > 15].copy().reset_index(drop=True)  # Take out extra small lineages
     
     if isinstance(artificial, pd.DataFrame):  # If artificial lineages is a dataframe, plot those too
-        artificial = artificial[artificial['max_gen'] > 7].copy().reset_index(drop=True)  # Take out extra small lineages
+        artificial = artificial[artificial['max_gen'] > 7].copy().reset_index(drop=True)  # Take out extra small lineages -- 15?
         add_scatterplot_of_averages(var1, var2, pooled, artificial, ax, 'Artificial')  # How a random average behavior is supposed to act when only keeping per-cycle correlations
         
         no_nans_art = artificial[[var1, var2]].copy().dropna()  # drop the NaNs
@@ -157,67 +157,69 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
 #########################################
 
 
-pu = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'pu', False))
-ta = pd.read_csv(retrieve_dataframe_directory('Pooled_SM', 'ta', False)).drop('generation', axis=1).drop_duplicates()
-# pu['fold_growth'] = np.log(pu['fold_growth'])
-art = shuffle_info(pu, False)
-art_ta = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates().reset_index(drop=True)
+def main(**kwargs):
+    pu = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + "physical_units_without_outliers.csv")
+    ta = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + "time_averages_without_outliers.csv").drop('generation', axis=1).drop_duplicates()
 
-num = 10
+    # pu['fold_growth'] = np.log(pu['fold_growth'])
+    art = shuffle_info(pu, False)
+    art_ta = get_time_averages_df(shuffle_info(pu, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates().reset_index(drop=True)
 
-scale = 1.5
+    num = 10
 
-sns.set_context('paper', font_scale=1 * scale)
-sns.set_style("ticks", {'axes.grid': False})
+    scale = 1.5
 
-fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[6.5 * scale, 4.2 * scale])
+    sns.set_context('paper', font_scale=1 * scale)
+    sns.set_style("ticks", {'axes.grid': False})
 
-axes[0, 0].set_title('A', x=-.2, fontsize='xx-large')
-axes[0, 1].set_title('B', x=-.2, fontsize='xx-large')
-axes[0, 2].set_title('C', x=-.2, fontsize='xx-large')
-axes[1, 0].set_title('D', x=-.2, fontsize='xx-large')
-axes[1, 1].set_title('E', x=-.2, fontsize='xx-large')
-axes[1, 2].set_title('F', x=-.2, fontsize='xx-large')
+    fig, axes = plt.subplots(2, 3, tight_layout=True, figsize=[6.5 * scale, 4.2 * scale])
 
-kde_scatterplot_variables(
-    df=ta.copy(),
-    var1='growth_rate',
-    var2='generationtime',
-    num=num,
-    ax=axes[0, 2],
-    line_func=[lambda x: np.log(2) / x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, , lambda x: pu['fold_growth'].mean() / x
-    pooled=False,
-    artificial=art_ta,
-    pu=pu
-)
+    axes[0, 0].set_title('A', x=-.2, fontsize='xx-large')
+    axes[0, 1].set_title('B', x=-.2, fontsize='xx-large')
+    axes[0, 2].set_title('C', x=-.2, fontsize='xx-large')
+    axes[1, 0].set_title('D', x=-.2, fontsize='xx-large')
+    axes[1, 1].set_title('E', x=-.2, fontsize='xx-large')
+    axes[1, 2].set_title('F', x=-.2, fontsize='xx-large')
 
-changed = pu.copy()
-changed['fold_growth'] = np.exp(changed['fold_growth'])
-changed_ta = get_time_averages_df(changed, phenotypic_variables).drop('generation', axis=1).drop_duplicates().reset_index(drop=True)
-art_changed_ta = get_time_averages_df(shuffle_info(changed, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates().reset_index(drop=True)
+    kde_scatterplot_variables(
+        df=ta.copy(),
+        var1='growth_rate',
+        var2='generationtime',
+        num=num,
+        ax=axes[0, 2],
+        line_func=[lambda x: np.log(2) / x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, , lambda x: pu['fold_growth'].mean() / x
+        pooled=False,
+        artificial=art_ta,
+        pu=pu
+    )
 
-kde_scatterplot_variables(
-    df=changed_ta,
-    var1='division_ratio',
-    var2='fold_growth',
-    num=num,
-    ax=axes[1, 2],
-    line_func=[lambda x: 1 / x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, , lambda x: np.mean(np.exp(pu['fold_growth']) * np.mean(pu['division_ratio'])) / x
-    pooled=False,
-    artificial=art_changed_ta,
-    sym2=r'$\overline{e^{\phi}}$',
-    pu=changed
-)
+    changed = pu.copy()
+    changed['fold_growth'] = np.exp(changed['fold_growth'])
+    changed_ta = get_time_averages_df(changed, phenotypic_variables).drop('generation', axis=1).drop_duplicates().reset_index(drop=True)
+    art_changed_ta = get_time_averages_df(shuffle_info(changed, False), phenotypic_variables).drop('generation', axis=1).drop_duplicates().reset_index(drop=True)
 
-# handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
-handles, labels = axes[0, 2].get_legend_handles_labels()
-axes[0, 2].legend(handles[::-1], labels[::-1], fontsize='small')  # , markerscale=.5
+    kde_scatterplot_variables(
+        df=changed_ta,
+        var1='division_ratio',
+        var2='fold_growth',
+        num=num,
+        ax=axes[1, 2],
+        line_func=[lambda x: 1 / x],  # 'regression',  #lambda x: np.log(2) / x, lambda x: -x ;;;;; None, , lambda x: np.mean(np.exp(pu['fold_growth']) * np.mean(pu['division_ratio'])) / x
+        pooled=False,
+        artificial=art_changed_ta,
+        sym2=r'$\overline{e^{\phi}}$',
+        pu=changed
+    )
 
-plot_pair_scatterplots(pu, 'generationtime', 'generationtime', axes[0, 1])
-plot_pair_scatterplots(pu, 'growth_rate', 'growth_rate', axes[0, 0])
-plot_pair_scatterplots(pu, 'fold_growth', 'fold_growth', axes[1, 0])
-plot_pair_scatterplots(pu, 'division_ratio', 'division_ratio', axes[1, 1])  # , sym1=r'$\overline{\ln(f)}^{\, A}$', sym2=r'$\overline{\ln(f)}^{\, B}$')
-# plt.legend()
-# plt.savefig('alpha_tau.png', dpi=300)
-plt.show()
-plt.close()
+    # handles = [mpatches.Patch(color=cmap[1], label='Artificial'), mpatches.Patch(color=cmap[0], label='Trace')]
+    handles, labels = axes[0, 2].get_legend_handles_labels()
+    axes[0, 2].legend(handles[::-1], labels[::-1], fontsize='small')  # , markerscale=.5
+
+    plot_pair_scatterplots(pu, 'generationtime', 'generationtime', axes[0, 1])
+    plot_pair_scatterplots(pu, 'growth_rate', 'growth_rate', axes[0, 0])
+    plot_pair_scatterplots(pu, 'fold_growth', 'fold_growth', axes[1, 0])
+    plot_pair_scatterplots(pu, 'division_ratio', 'division_ratio', axes[1, 1])  # , sym1=r'$\overline{\ln(f)}^{\, A}$', sym2=r'$\overline{\ln(f)}^{\, B}$')
+    # plt.legend()
+    plt.savefig(f'MicroenvironmentAverageBehavior{slash}alpha_tau{kwargs["noise_index"]}.png', dpi=300)
+    # plt.show()
+    plt.close()
