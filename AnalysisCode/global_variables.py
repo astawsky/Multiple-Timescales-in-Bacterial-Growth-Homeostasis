@@ -514,7 +514,9 @@ def check_the_division(data_origin_name, lineages=[], raw_lineages=[], raw_indic
     
     if len(raw_lineages) == 0:
         print(kwargs)
-        raw_lineages = pd.read_csv(os.path.dirname(os.path.dirname(kwargs['processed_data'](data_origin_name))) + '/raw_data_all_in_one.csv')
+        # raw_lineages = pd.read_csv(os.path.dirname(os.path.dirname(kwargs['processed_data'](data_origin_name))) + '/raw_data_all_in_one.csv')
+        raw_lineages = pd.read_csv(
+            kwargs['raw_data'](data_origin_name) + 'raw_data_all_in_one.csv')
     if len(raw_indices) == 0:
         raw_indices = pd.read_csv(kwargs['processed_data'](data_origin_name) + 'raw_indices_processing.csv')
     if len(pu) == 0:
@@ -531,7 +533,7 @@ def check_the_division(data_origin_name, lineages=[], raw_lineages=[], raw_indic
             plot_it = True
         else:
             plot_it = False
-        
+
         rl = raw_lineages[raw_lineages['lineage_ID'] == lin_id].copy().sort_values('time').reset_index(drop=True)
         ri = raw_indices[raw_indices['lineage_ID'] == lin_id].copy().sort_values('value').reset_index(drop=True)
         cycle_variables_lineage = pu[pu['lineage_ID'] == lin_id].copy().sort_values('generation').reset_index(drop=True)

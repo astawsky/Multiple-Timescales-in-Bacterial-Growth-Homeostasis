@@ -17,12 +17,14 @@ from SizeVariablesAverageBehavior.size_variables_code import main as size_variab
 from TablesSupp.create_tables import main as tables_supp
 from TimescaleCorrelations.single_cell_correlations import main as single_cell_corrs
 from TrendForDFA.trending_variables import main as dfa_trend
+from NewIntroductoryFigure.plot_intro_figure import main as new_intro_figure
+from NewIntroductoryFigure.new_fig_1 import main as new_fig_1
 import os
 
 # Arguments for type of noise we want added
 noise_args = {
-    'types_of_noise': ['Add', 'Add'],  # [None],#
-    'amount_of_noise': [.1, .2],  # [None],#
+    'types_of_noise': [None],  # ['Add', 'Add'],
+    'amount_of_noise': [None],  # [.1, .2],
     'check': False,
     'ds_names': dataset_names
 # [
@@ -44,7 +46,7 @@ for tof, aof in zip(noise_args["types_of_noise"], noise_args["amount_of_noise"])
                 os.path.abspath(__file__)) + f'{slash}Datasets{slash}' + dummy + f'{slash}RawData{slash}',
             'raw_data': lambda dummy: os.path.dirname(
                 os.path.abspath(
-                    __file__)) + f'{slash}Datasets{slash}' + dummy + f'{slash}RawData{slash}',
+                    __file__)) + f'{slash}Datasets{slash}' + dummy + f'{slash}',
             'processed_data': lambda dummy: os.path.dirname(
                 os.path.abspath(
                     __file__)) + f'{slash}Datasets{slash}' + dummy + f'{slash}ProcessedData{slash}',
@@ -61,6 +63,10 @@ for tof, aof in zip(noise_args["types_of_noise"], noise_args["amount_of_noise"])
                 __file__)) + f'{slash}Datasets{slash}' + dummy + f'{slash}{tof}_{aof}{slash}z_score_under_3{slash}',
             'noise_index': f'_{tof}_{aof}'
         })
+
+    # new_intro_figure(**noise_args)
+    new_fig_1(**noise_args)
+    exit()
 
     process_data(**noise_args)
 
@@ -93,5 +99,3 @@ for tof, aof in zip(noise_args["types_of_noise"], noise_args["amount_of_noise"])
     single_cell_corrs(**noise_args)
 
     dfa_trend(**noise_args)
-
-    exit()
