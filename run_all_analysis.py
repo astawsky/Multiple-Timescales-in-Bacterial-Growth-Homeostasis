@@ -64,38 +64,38 @@ for tof, aof in zip(noise_args["types_of_noise"], noise_args["amount_of_noise"])
             'noise_index': f'_{tof}_{aof}'
         })
 
-    # new_intro_figure(**noise_args)
-    new_fig_1(**noise_args)
-    exit()
+    # process_data(**noise_args)
+    #
+    # manifold_3d(**noise_args)  # Uses datasets specified in noise arguments, though it should be all...
+    #
+    # variance_decomposed(**noise_args)  # Requires datasets 'Pooled_SM', 'lambda_lb', 'Maryam_LongTraces'
+    #
+    # variance_decomposed_supp(**noise_args)
+    #
+    # pyramids(**noise_args)
+    #
+    # histogram_of_generations_per_lineage(**noise_args)  # Not necessary since it is not published
+    #
+    # intergenerational_corrs(**noise_args)
+    #
+    # microenv_averages(**noise_args)
+    #
+    # pair_lineage_corrs(**noise_args)
+    #
+    # dfa_maintext(**noise_args)
+    #
+    # dfa_supp(**noise_args)
+    #
+    # pooled_average(**noise_args)
+    #
+    # size_variables(**noise_args)
+    #
+    # tables_supp(**noise_args)
+    #
+    # single_cell_corrs(**noise_args)
+    #
+    # dfa_trend(**noise_args)
 
-    process_data(**noise_args)
-
-    manifold_3d(**noise_args)  # Uses datasets specified in noise arguments, though it should be all...
-
-    variance_decomposed(**noise_args)  # Requires datasets 'Pooled_SM', 'lambda_lb', 'Maryam_LongTraces'
-
-    variance_decomposed_supp(**noise_args)
-
-    pyramids(**noise_args)
-
-    histogram_of_generations_per_lineage(**noise_args)  # Not necessary since it is not published
-
-    intergenerational_corrs(**noise_args)
-
-    microenv_averages(**noise_args)
-
-    pair_lineage_corrs(**noise_args)
-
-    dfa_maintext(**noise_args)
-
-    dfa_supp(**noise_args)
-
-    pooled_average(**noise_args)
-
-    size_variables(**noise_args)
-
-    tables_supp(**noise_args)
-
-    single_cell_corrs(**noise_args)
-
-    dfa_trend(**noise_args)
+    new_intro_figure(**noise_args)
+    #
+    # new_fig_1(**noise_args)

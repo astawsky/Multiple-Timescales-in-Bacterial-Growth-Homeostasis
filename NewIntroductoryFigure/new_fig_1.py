@@ -53,12 +53,45 @@ def shuffle_info_sm(info):
 
 def plot_neighbor_raw_data(ax, num1, num2, **kwargs):
     raw_lineages = pd.read_csv(kwargs['raw_data']('Maryam_LongTraces') + 'raw_data_all_in_one.csv')
-    a_trace = raw_lineages[raw_lineages['lineage_ID'] == num1].copy().sort_values('time').reset_index(drop=True)
-    b_trace = raw_lineages[raw_lineages['lineage_ID'] == num2].copy().sort_values('time').reset_index(drop=True)
+    raw_indices = pd.read_csv(kwargs['processed_data']('Maryam_LongTraces') + 'raw_indices_processing.csv')
 
-    ax.plot(a_trace['time'].values, a_trace['length'].values, label='A')
-    ax.plot(b_trace['time'].values, b_trace['length'].values, label='B')
+    a_last_index = raw_indices[(raw_indices.type == 'end') & (raw_indices.lineage_ID == num1)].value.values[30]
+
+    cut_mask = (raw_lineages.time <= a_last_index)
+
+    a_trace = raw_lineages[(raw_lineages['lineage_ID'] == num1) & cut_mask].copy().sort_values('time').reset_index(drop=True)
+    b_trace = raw_lineages[(raw_lineages['lineage_ID'] == num2) & cut_mask].copy().sort_values('time').reset_index(drop=True)
+    # print(a_trace)
+    # print(raw_indices)
+    # exit()
+
+    ax.plot(a_trace['time'].values, a_trace['length'].values, label='A', color='green')
+
+    # ax.plot(b_trace['time'].values, b_trace['length'].values, label='B', color='red')
     # ax.legend()
+
+
+def possible_mm_lineages(**kwargs):
+    # 133 ( GOOD COORDINATION ), 315, 91, 341, 311, 111 --> Possible NL lineages
+
+    ta = pd.read_csv(kwargs['processed_data']('Maryam_LongTraces') + 'time_averages.csv').drop(
+        columns=['generation']).drop_duplicates()
+    pu = pd.read_csv(kwargs['processed_data']('Maryam_LongTraces') + 'physical_units.csv')
+
+    # print(ta.columns)
+    # print(pu.columns)
+    # mask = ta['lineage_ID'].isin(pu[pu['dataset'] == 'NL'].lineage_ID.values)
+    # print(len(ta[(ta['lineage_ID'] % 2 == 0) & mask].max_gen.values))
+    #
+    # updated = ta[(ta['lineage_ID'] % 2 == 0) & mask]
+    #
+    # print(updated.sort_values('max_gen').lineage_ID.values)
+    # updated1 = ta[(ta['lineage_ID'] % 2 == 1) & mask]
+    # print(updated1.sort_values('max_gen').lineage_ID.values)
+
+    print('min', ta[ta['length_birth'] == ta['length_birth'].min()].lineage_ID)
+    print('max', ta[ta['length_birth'] == ta['length_birth'].max()].lineage_ID)
+    exit()
 
 
 def plot_nl_length_birth_in_gentime_and_avg(num1, num2, ax, **kwargs):
@@ -66,11 +99,12 @@ def plot_nl_length_birth_in_gentime_and_avg(num1, num2, ax, **kwargs):
         columns=['generation']).drop_duplicates()
     pu = pd.read_csv(kwargs['processed_data']('Maryam_LongTraces') + 'physical_units.csv')
 
-    ax.plot(pu[pu['lineage_ID'] == num1].generation.values, pu[pu['lineage_ID'] == num1].length_birth.values, c='blue')
+    ax.plot(pu[pu['lineage_ID'] == num1].generation.values, pu[pu['lineage_ID'] == num1].length_birth.values,
+            c='green', marker='.')
     ax.plot(pu[pu['lineage_ID'] == num2].generation.values, pu[pu['lineage_ID'] == num2].length_birth.values,
-             c='orange')
-    ax.axhline(ta[ta['lineage_ID'] == num1].length_birth.values, c='blue')
-    ax.axhline(ta[ta['lineage_ID'] == num2].length_birth.values, c='orange')
+             c='red', marker='.')
+    ax.axhline(ta[ta['lineage_ID'] == num1].length_birth.values, c='green')
+    ax.axhline(ta[ta['lineage_ID'] == num2].length_birth.values, c='red')
     ax.set_xlabel('n [Gen]')
     ax.set_ylabel(r'$x_0(n) \, [\mu m]$')
     # plt.show()
@@ -81,10 +115,22 @@ def the_hists(num1, num2, ax, **kwargs):
     pu = pd.read_csv(kwargs['processed_data']('Maryam_LongTraces') + 'physical_units.csv')
 
     sns.histplot(data=pu, x='length_birth', color='grey', ax=ax, stat='density', fill=True, kde=True)
-    sns.histplot(data=pu[pu.lineage_ID == num1], x='length_birth', color='blue', ax=ax, stat='density', fill=1, kde=True)
-    sns.histplot(data=pu[pu.lineage_ID == num2], x='length_birth', color='orange', ax=ax, stat='density', fill=1, kde=True)
-    ax.set_xlim([1, 5])
-    ax.set_xlabel(r'$x_0$')
+    sns.histplot(data=pu[pu.lineage_ID == num1], x='length_birth', color='green', ax=ax, stat='density', fill=True, kde=False)
+    sns.histplot(data=pu[pu.lineage_ID == num2], x='length_birth', color='red', ax=ax, stat='density', fill=True, kde=False)
+    ax.set_xlim([1.3, 4])
+    ax.set_xlabel(r'$x_0 \, [\mu m]$')
+
+
+def raw_data_plot(num, ax, **kwargs):
+    raw_lineages = pd.read_csv(kwargs['raw_data']('Maryam_LongTraces') + 'raw_data_all_in_one.csv')
+    rl = raw_lineages[raw_lineages['lineage_ID'] == num].copy().sort_values('time').reset_index(drop=True)
+    sns.lineplot(data=rl, x='time', y='length', ax=ax, color=cmap[0])
+    sns.scatterplot(data=rl, x='time', y='length', ax=ax, alpha=.5, color=cmap[0])
+    # ax.plot(rl['time'], rl['length'], markerfacecolor=(1, 1, 0, 0.5))  # , marker='o', alpha=0.3)
+    ax.set_xlabel('Time [Mins.]')
+    ax.set_ylabel(r'Length $[\mu m]$')
+    ax.set_xlim([0, 10])
+    # ax.plot()
 
 
 def main(**kwargs):
@@ -107,12 +153,14 @@ def main(**kwargs):
 
     fig, axes = plt.subplots(2, 2, figsize=(6.5 * scale, 6.5 * scale))  # figsize=()
 
-    num1 = 5  # 5 & 28 or 29
-    num2 = 29
+    num1 = 23 # 5  # 5 & 28 or 29
+    num2 = 10 # 29
 
     # # From the process_rawdata.py file where it is used to visually confirm the regression as well as the division events
     # check_the_division('Pooled_SM', lineages=[1], raw_lineages=[], raw_indices=[], pu=[], ax=axes[0, 1], **kwargs)  # A trace
     # check_the_division('Pooled_SM', lineages=[2], raw_lineages=[], raw_indices=[], pu=[], ax=axes[0, 1], **kwargs)  # B trace
+
+    # possible_mm_lineages(**kwargs)
 
     # plot_neighbor_raw_data(axes[0, 1], **kwargs)
     axes[0, 0].set_title('A', x=-.3, fontsize='xx-large')
@@ -122,9 +170,17 @@ def main(**kwargs):
     axes[0, 0].set_frame_on(False)
     axes[0, 0].set_xticks([])
     axes[0, 0].set_yticks([])
-    plot_neighbor_raw_data(axes[0, 1], num1, num2, **kwargs)
+
+    # check_the_division('Maryam_LongTraces', lineages=[num1], raw_lineages=[], raw_indices=[], pu=[], ax=axes[0, 1], **kwargs)
+    raw_data_plot(num1, axes[0, 1], **kwargs)
+    # axes[0, 1].legend()
+    # axes[0, 1].set_xlabel('Absolute Time (Mins.)')
+    # axes[0, 1].set_ylabel(r'Length $[\mu m]$')
+    # axes[0, 1].set_xlim([0, 20])
+
+    # plot_neighbor_raw_data(axes[0, 1], num1, num2, **kwargs)
     plot_nl_length_birth_in_gentime_and_avg(num1, num2, axes[1, 0], **kwargs)
-    the_hists(num1, num2, axes[1, 1], **kwargs)
+    the_hists(23, 10, axes[1, 1], **kwargs)
 
     plt.tight_layout()
     plt.savefig(f'NewIntroductoryFigure{slash}fig1.png', dpi=300)

@@ -68,16 +68,22 @@ def possible_nl_lineages(**kwargs):
         columns=['generation']).drop_duplicates()
     pu = pd.read_csv(kwargs['processed_data']('Pooled_SM') + 'physical_units.csv')
 
-    print(ta.columns)
-    print(pu.columns)
-    mask = ta['lineage_ID'].isin(pu[pu['dataset'] == 'NL'].lineage_ID.values)
-    print(len(ta[(ta['lineage_ID'] % 2 == 0) & mask].max_gen.values))
+    mask = (ta['max_gen'] >= 30)
 
-    updated = ta[(ta['lineage_ID'] % 2 == 0) & mask]
-
-    print(updated.sort_values('max_gen').lineage_ID.values)
-    updated1 = ta[(ta['lineage_ID'] % 2 == 1) & mask]
-    print(updated1.sort_values('max_gen').lineage_ID.values)
+    print('min\n', ta[mask].sort_values('length_birth', ascending=True)[['lineage_ID', 'max_gen']])
+    print('max\n', ta[mask].sort_values('length_birth', ascending=False)[['lineage_ID', 'max_gen']])
+    # exit()
+    #
+    # print(ta.columns)
+    # print(pu.columns)
+    # mask = ta['lineage_ID'].isin(pu[pu['dataset'] == 'NL'].lineage_ID.values)
+    # print(len(ta[(ta['lineage_ID'] % 2 == 0) & mask].max_gen.values))
+    #
+    # updated = ta[(ta['lineage_ID'] % 2 == 0) & mask]
+    #
+    # print(updated.sort_values('max_gen').lineage_ID.values)
+    # updated1 = ta[(ta['lineage_ID'] % 2 == 1) & mask]
+    # print(updated1.sort_values('max_gen').lineage_ID.values)
 
 
 def plot_nl_length_birth_in_gentime_and_avg(num, ax, **kwargs):
@@ -85,11 +91,12 @@ def plot_nl_length_birth_in_gentime_and_avg(num, ax, **kwargs):
         columns=['generation']).drop_duplicates()
     pu = pd.read_csv(kwargs['processed_data']('Pooled_SM') + 'physical_units.csv')
 
-    ax.plot(pu[pu['lineage_ID'] == num].generation.values, pu[pu['lineage_ID'] == num].length_birth.values, c='blue')
+    ax.plot(pu[pu['lineage_ID'] == num].generation.values, pu[pu['lineage_ID'] == num].length_birth.values, c='green',
+            marker='.')
     ax.plot(pu[pu['lineage_ID'] == num + 1].generation.values, pu[pu['lineage_ID'] == num + 1].length_birth.values,
-             c='orange')
-    ax.axhline(ta[ta['lineage_ID'] == num].length_birth.values, c='blue')
-    ax.axhline(ta[ta['lineage_ID'] == num + 1].length_birth.values, c='orange')
+            c='red', marker='.')
+    ax.axhline(ta[ta['lineage_ID'] == num].length_birth.values, c='green')
+    ax.axhline(ta[ta['lineage_ID'] == num + 1].length_birth.values, c='red')
     ax.set_xlabel('n [Gen]')
     ax.set_ylabel(r'$x_0(n) \, [\mu m]$')
     # plt.show()
@@ -100,10 +107,13 @@ def the_hists(num, ax, **kwargs):
     pu = pd.read_csv(kwargs['processed_data']('Pooled_SM') + 'physical_units.csv')
 
     sns.histplot(data=pu, x='length_birth', color='grey', ax=ax, stat='density', fill=True, kde=True)
-    sns.histplot(data=pu[pu.lineage_ID == num], x='length_birth', color='blue', ax=ax, stat='density', fill=1, kde=True)
-    sns.histplot(data=pu[pu.lineage_ID == num+1], x='length_birth', color='orange', ax=ax, stat='density', fill=1, kde=True)
+    sns.histplot(data=pu[pu.lineage_ID == num], x='length_birth', color='green', ax=ax, stat='density', fill=True, kde=False)
+    sns.histplot(data=pu[pu.lineage_ID == num+1], x='length_birth', color='red', ax=ax, stat='density', fill=True, kde=False)
+
+    # sns.histplot(data=pu[pu.lineage_ID == 337], x='length_birth', color='green', ax=ax, stat='density', fill=True, kde=False)
+    # sns.histplot(data=pu[pu.lineage_ID == 296], x='length_birth', color='red', ax=ax, stat='density', fill=True, kde=False)
     ax.set_xlim([1, 5])
-    ax.set_xlabel(r'$x_0$')
+    ax.set_xlabel(r'$x_0 \, [\mu m]$')
 
 
 """ variance decomposition for SM data conditioning on trap and lineage """
@@ -214,7 +224,7 @@ def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
 
     # The legend
     handles, labels = ax.get_legend_handles_labels()
-    plt.legend(handles, labels, title='')
+    plt.legend(handles, labels, title='', loc='upper right')
 
     # Graphical things
     ax.set_xlabel('')
@@ -223,6 +233,7 @@ def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
 
 
 def main(**kwargs):
+    # possible_nl_lineages(**kwargs)
 
     seaborn_preamble()
 
