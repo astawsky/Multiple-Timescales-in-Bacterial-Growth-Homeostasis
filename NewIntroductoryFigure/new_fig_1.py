@@ -127,7 +127,7 @@ def raw_data_plot(num, ax, **kwargs):
     sns.lineplot(data=rl, x='time', y='length', ax=ax, color=cmap[0])
     sns.scatterplot(data=rl, x='time', y='length', ax=ax, alpha=.5, color=cmap[0])
     # ax.plot(rl['time'], rl['length'], markerfacecolor=(1, 1, 0, 0.5))  # , marker='o', alpha=0.3)
-    ax.set_xlabel('Time [Mins.]')
+    ax.set_xlabel('Time [hr]')
     ax.set_ylabel(r'Length $[\mu m]$')
     ax.set_xlim([0, 10])
     # ax.plot()
