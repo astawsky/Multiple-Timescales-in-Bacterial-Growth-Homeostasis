@@ -143,13 +143,14 @@ def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
                 lin = trap_ensemble[(trap_ensemble['trace'] == trace)].copy()  # All the bacteria in this trap
 
                 # Add the deviation, for all generations in this lineage, of the mean of this experiment from the mean of the pooled ensemble
-                trap = pd.concat([trap, lin[variables].count() * ((trap_mean - pooled_pu_mean) ** 2)], ignore_index=True)
+                # trap = pd.concat([trap, lin[variables].count() * ((trap_mean - pooled_pu_mean) ** 2)], ignore_index=True)
+                trap.loc[len(trap), :] = lin[variables].count() * ((trap_mean - pooled_pu_mean) ** 2)
 
                 # Add the deviation, for all generations in this lineage, of the mean of this trap from the mean of this experiment
-                lin_spec = pd.concat([lin_spec, lin[variables].count() * ((lin[variables].mean() - trap_mean) ** 2)], ignore_index=True)
+                lin_spec.loc[len(lin_spec), :] = lin[variables].count() * ((lin[variables].mean() - trap_mean) ** 2)
 
                 # Add the deviation of all the generation-specific values around the lineage mean
-                delta = pd.concat([delta, ((lin[variables] - lin[variables].mean()) ** 2).sum()], ignore_index=True)
+                delta.loc[len(delta), :] = ((lin[variables] - lin[variables].mean()) ** 2).sum()
 
         # Calculate the variance for each term with one degree of freedom
         trap_var = trap.sum() / (pu[variables].count() - 1)

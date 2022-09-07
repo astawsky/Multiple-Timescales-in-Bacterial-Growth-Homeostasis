@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import os
-# from mpl_toolkits.mplot3d import axes3d, Axes3D
     
     
 def plot_manifold(ax):
@@ -20,13 +19,11 @@ def plot_manifold(ax):
 
     Y = 1 / np.exp(X * Z)  # In the case of ln(f)
     
-    ax.plot_wireframe(Z, X, Y, alpha=.5, linewidth=.3)  # plot_surface , alpha=.5
+    ax.plot_wireframe(Z, X, Y, alpha=.5, linewidth=.3)  # plot_surface
     
     
 def plot_perfect_line(ax):
-    # gr_domain = np.linspace(0, 3)
     gt_domain = np.linspace(0.235, 2.5)
-    # gr_domain = np.linspace(df['growth_rate'].min(), df['growth_rate'].max())
 
     gr_domain = np.array([np.log(2) / z for z in gt_domain])
 

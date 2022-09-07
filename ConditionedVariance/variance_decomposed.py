@@ -56,7 +56,6 @@ def shuffle_info_sm(info):
 def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
     # The dataframe with all the experiments in it
     total_df = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + 'physical_units_without_outliers.csv')
-    # total_df = pd.read_csv(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f'/Datasets/Pooled_SM/{kwargs["noise_index"].split("_").join("_")}ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
 
     # Check what type of pair lineages we want to look at
     if lin_type == 'NL':
@@ -141,11 +140,6 @@ def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
                            symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
                            symbols['physical_units']['added_length'], '  ', '   '])
     
-    # # The order they appear in
-    # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-    #               symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-    #               symbols['physical_units']['growth_rate'], '   ']
-    
     # Fill in the grey area of the noise
     plt.fill_between(real_order,
                      [output_df[output_df['kind'] == 'Artificial']['Trap+Lin'].mean() for _ in range(len(real_order))],
@@ -179,7 +173,6 @@ def mm_traps(chosen_datasets, ax, **kwargs):
         print(data_origin)
         pu = kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv'
         print(pu)
-        # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + kwargs['noise_index'].split("_").join("_") + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
         pu = pd.read_csv(pu)
         
         # Give them the experiment category
@@ -270,11 +263,6 @@ def mm_traps(chosen_datasets, ax, **kwargs):
     real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
                   symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
                   symbols['physical_units']['added_length'], '  ', '   '])
-    
-    # # The order we want them to appear in
-    # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-    #               symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-    #               symbols['physical_units']['growth_rate'], '   ']
     
     # Conditions for the grey noise area from the variance decomposition of the artificial lineages
     conds = (output_df['kind'] == 'Artificial') & (~output_df['variable'].isin(['', ' ', '  ', '   ']))

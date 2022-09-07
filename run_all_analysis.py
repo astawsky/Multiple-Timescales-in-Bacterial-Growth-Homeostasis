@@ -64,33 +64,33 @@ for tof, aof in zip(noise_args["types_of_noise"], noise_args["amount_of_noise"])
             'noise_index': f'_{tof}_{aof}'
         })
 
-    # process_data(tof=tof, aof=aof, **noise_args)
+    process_data(tof=tof, aof=aof, **noise_args)
     
-    # manifold_3d(**noise_args)  # Uses datasets specified in noise arguments, though it should be all...
+    manifold_3d(**noise_args)  # Uses datasets specified in noise arguments, though it should be all...
     
-    # variance_decomposed(**noise_args)  # Requires datasets 'Pooled_SM', 'lambda_lb', 'Maryam_LongTraces'
+    variance_decomposed(**noise_args)  # Requires datasets 'Pooled_SM', 'lambda_lb', 'Maryam_LongTraces'
     
-    # variance_decomposed_supp(**noise_args)
+    variance_decomposed_supp(**noise_args)
     
-    # pyramids(**noise_args)
+    pyramids(**noise_args)
     
-    # histogram_of_generations_per_lineage(**noise_args)  # Not necessary since it is not published
+    histogram_of_generations_per_lineage(**noise_args)  # Not necessary since it is not published
     
-    # intergenerational_corrs(**noise_args)
+    intergenerational_corrs(**noise_args)
     
-    # microenv_averages(**noise_args)
+    microenv_averages(**noise_args)
     
-    # pair_lineage_corrs(**noise_args)
+    pair_lineage_corrs(**noise_args)
     
-    # dfa_maintext(**noise_args)
+    dfa_maintext(**noise_args)
     
-    # dfa_supp(**noise_args)
+    dfa_supp(**noise_args)
     
-    # pooled_average(**noise_args)
+    pooled_average(**noise_args)
     
-    # size_variables(**noise_args)
+    size_variables(**noise_args)
     
-    # tables_supp(**noise_args)
+    tables_supp(**noise_args)
     
     single_cell_corrs(**noise_args)
     
