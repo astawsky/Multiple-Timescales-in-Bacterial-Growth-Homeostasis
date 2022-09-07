@@ -475,7 +475,7 @@ def plot_dfa_slopes(ax, **kwargs):
 
         scaling_exponents['experiment'] = ds  # Add their dataset name
         
-        se = se.append(scaling_exponents, ignore_index=True)  # Append them
+        se = pd.concat([se, scaling_exponents], ignore_index=True)  # Append them
     
     se = se.replace({'$f_n e^{\phi_{n}}$': r'$r$'})  # Use the latex variable names
     

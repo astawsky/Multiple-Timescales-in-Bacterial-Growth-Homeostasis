@@ -95,8 +95,7 @@ def clean_up(lineage, window_size_of_interest=200):
         lineage = lineage[~lineage.index.isin(non_positives)].reset_index(
             drop=True)  # Goes without saying but there was an instance of this in the Wang Data
 
-    total_nans = np.append(total_nans,
-                           non_positives).flatten()  # Add the non-positives to the total indices we will ignore for analysis
+    total_nans = np.append(total_nans, non_positives).flatten()  # Add the non-positives to the total indices we will ignore for analysis
 
     lineage = lineage.reset_index(drop=True)  # for good-practice
 
@@ -246,7 +245,7 @@ def get_the_physiological_variables(clean_lin, start_indices, end_indices, lin_i
             continue
 
         # the phenotypic variables of a cycle
-        cycle = pd.Series()
+        cycle = pd.Series(dtype=object)
 
         # Define the cycle phenotypic variables
         cycle['generationtime'] = rl['time'].iloc[end] - rl['time'].iloc[start]  # The inter-division time
@@ -278,11 +277,10 @@ def get_the_physiological_variables(clean_lin, start_indices, end_indices, lin_i
         cycle['added_length'] = cycle['length_final'] - cycle['length_birth']
 
         # Add them to the cycle variables of the lineage
-        cycle_variables_lineage = cycle_variables_lineage.append(cycle, ignore_index=True)
+        cycle_variables_lineage.loc[len(cycle_variables_lineage),:] = cycle
 
     # The experimental size variables
-    cycle_variables_lineage['div_and_fold'] = cycle_variables_lineage['division_ratio'] * np.exp(
-        cycle_variables_lineage['fold_growth'])
+    cycle_variables_lineage['div_and_fold'] = cycle_variables_lineage['division_ratio'] * cycle_variables_lineage['fold_growth'].apply(lambda dd: np.exp(dd))
 
     cycle_variables_lineage = cycle_variables_lineage.sort_values('generation')  # Good practice
 
@@ -375,11 +373,16 @@ def deal_with_indices(lineage, lineage_id, indices_and_mistakes, check):
             [outsider_start_indices, outsider_end_indices, raw_start, raw_end, rises, singularities, non_positives],
             ['outsider', 'outsider', 'start', 'end', 'rises', 'singularities', 'non_positives']):
         for v in value:
-            indices_and_mistakes = indices_and_mistakes.append({
+            indices_and_mistakes = pd.concat([indices_and_mistakes, pd.DataFrame({
                 'value': v,
                 'type': label,
                 'lineage_ID': lineage_id
-            }, ignore_index=True)
+            }, index=[len(indices_and_mistakes)])])
+            # indices_and_mistakes = indices_and_mistakes.append({
+            #     'value': v,
+            #     'type': label,
+            #     'lineage_ID': lineage_id
+            # }, ignore_index=True)
 
     if check:
         if np.array([l != 0 for l in [len(total_nans), len(non_positives), len(singularities), len(rises)]]).any():
@@ -658,15 +661,19 @@ class MM:
             print('type of MM data we are processing:', self.args['data_origin'])
             print(self.file_paths)
 
-        self.raw_data = pd.DataFrame(columns=['time', 'length', 'lineage_ID',
-                                              'filename'])  # Dataframe containing the measurements from the machine
-        self.raw_indices = pd.DataFrame(columns=['value', 'type',
-                                                 'lineage_ID'])  # Dataframe containing the division events and mistakes in the measurements
+        self.raw_data = pd.DataFrame(columns=[
+            'time', 'length', 'lineage_ID', 'filename'
+            ])  # Dataframe containing the measurements from the machine
+        self.raw_indices = pd.DataFrame(columns=[
+            'value', 'type', 'lineage_ID'
+            ])  # Dataframe containing the division events and mistakes in the measurements
 
-        self.cycle_variables = pd.DataFrame(columns=phenotypic_variables + ['lineage_ID',
-                                                                            'generation'])  # The physiological variables for each cell dataframe
-        self.with_outliers_cycle_variables = pd.DataFrame(columns=phenotypic_variables + ['lineage_ID',
-                                                                                          'generation'])  # The physiological variables for each cell dataframe, including outliers
+        self.cycle_variables = pd.DataFrame(columns=phenotypic_variables + [
+            'lineage_ID','generation'
+            ])  # The physiological variables for each cell dataframe
+        self.with_outliers_cycle_variables = pd.DataFrame(columns=phenotypic_variables + [
+            'lineage_ID', 'generation'
+            ])  # The physiological variables for each cell dataframe, including outliers
 
         # The files in lambda_lb file that contain an extra column in the .txt file. It caused a problem before taking it into account...
         extra_column = [
@@ -747,7 +754,7 @@ class MM:
             else:  # Make sure it is a good lineage
                 self.raw_indices = temporary_raw_indices
 
-            self.raw_data = self.raw_data.append(lineage, ignore_index=True)  # add it to the raw data
+            self.raw_data = pd.concat([self.raw_data, lineage], ignore_index=True)  # self.raw_data.append(lineage, ignore_index=True)  # add it to the raw data
 
             if self.args['check']:
                 # check_the_division(args, lineages=[count + 1 - offset], raw_lineages=lineage,
@@ -756,9 +763,8 @@ class MM:
                                    raw_indices=self.raw_indices, pu=physiological_variables)
 
             # append the physiological variables of this lineage to the bigger dataframe for all lineages in an experiment
-            self.cycle_variables = self.cycle_variables.append(physiological_variables, ignore_index=True)
-            self.with_outliers_cycle_variables = self.with_outliers_cycle_variables.append(
-                physiological_variables_with_outliers, ignore_index=True)
+            self.cycle_variables = pd.concat([self.cycle_variables, physiological_variables], ignore_index=True)  # self.cycle_variables.append(physiological_variables, ignore_index=True)
+            self.with_outliers_cycle_variables = pd.concat([self.with_outliers_cycle_variables, physiological_variables_with_outliers], ignore_index=True)  # self.with_outliers_cycle_variables.append(physiological_variables_with_outliers, ignore_index=True)
 
         if self.args['check']:
             print('processed data:\n', self.cycle_variables)
@@ -861,8 +867,8 @@ class MM:
                 self.args['source_raw_data'] + r'/raw_data_all_in_one.csv', index=False
             )
         else:  # Noisified data
-            # # Save the noisified raw data
-            # noise_raw_data = os.path.dirname(self.args['raw_data']) + r'/' + f'type_of_noise_{ton}_amount_of_noise_{aon}'
+            # Save the noisified raw data
+            noise_raw_data = os.path.dirname(self.args['source_raw_data']) + f"""{slash}type_of_noise_{self.args['type_of_noise']}_amount_of_noise_{self.args['amount_of_noise']}"""
 
             # Save the raw data
             self.raw_data.to_csv(
@@ -913,17 +919,6 @@ class SM:
         self.cycle_variables, self.with_outliers_cycle_variables, self.table_of_outliers, self.raw_indices = self.process_lineages()  # attribute physiological states
 
         self.save_dataframes()
-        # for type_of_noise in self.args['type_of_noise']:
-        #     for amount_of_noise in self.args['amount_of_noise']:
-        #
-        #         self.raw_data, self.files = self.input_raw_data(
-        #             type_of_noise=type_of_noise,
-        #             amount_of_noise=amount_of_noise
-        #         )  # organize raw data
-        #
-        #         self.cycle_variables, self.with_outliers_cycle_variables, self.table_of_outliers, self.raw_indices = self.process_lineages()  # attribute physiological states
-        #
-        #         self.save_dataframes(type_of_noise, amount_of_noise)
 
     # def save_dataframes(self, ton, aon):
     #     # rawdata will be in processed folder if noisified
@@ -1083,8 +1078,8 @@ class SM:
                 b_trace['length'] = b_trace['length'] + b_noise
 
             # the data contains all dataframes from the excel files in the directory _infiles
-            raw_data = raw_data.append(a_trace, ignore_index=True)
-            raw_data = raw_data.append(b_trace, ignore_index=True)
+            raw_data = pd.concat([raw_data, a_trace], ignore_index=True)  # raw_data.append(a_trace, ignore_index=True)
+            raw_data = pd.concat([raw_data, b_trace], ignore_index=True)  # raw_data.append(b_trace, ignore_index=True)
 
         # There must be some data
         assert len(raw_data) > 0
@@ -1121,8 +1116,8 @@ class SM:
             with_outliers['dataset'] = lineage['dataset'].unique()[0]
 
             # Append the cycle variables to the processed dataframe
-            cycle_variables = cycle_variables.append(cycle_variables_lineage, ignore_index=True)
-            with_outliers_cycle_variables = with_outliers_cycle_variables.append(with_outliers, ignore_index=True)
+            cycle_variables = pd.concat([cycle_variables, cycle_variables_lineage], ignore_index=True)  # cycle_variables.append(cycle_variables_lineage, ignore_index=True)
+            with_outliers_cycle_variables = pd.concat([with_outliers_cycle_variables, with_outliers], ignore_index=True)  # with_outliers_cycle_variables.append(with_outliers, ignore_index=True)
 
             if self.args['check']:
                 check_the_division(self.args, lineages=[lineage_id], raw_lineages=lineage,
@@ -1139,21 +1134,26 @@ class SM:
                 This is because, by definition, the first two variables have 1 NaN value at the first generation, 
                 while the third variable has 1 NaN at the end of each lineage.
                 """
-                table_of_outliers = table_of_outliers.append({
+                table_of_outliers = pd.concat([table_of_outliers, pd.DataFrame({
                     'variable': variable,
                     'percentage': cycle_variables[variable].count() / (
                                 len(cycle_variables[variable]) - (1 * len(cycle_variables['lineage_ID'].unique())))
-                }, ignore_index=True)
+                }, index=[len(table_of_outliers)])])
 
                 if self.args['check']:
                     print(variable, cycle_variables[variable].count() / (
                                 len(cycle_variables[variable]) - (1 * len(cycle_variables['lineage_ID'].unique()))))
             else:
-                table_of_outliers = table_of_outliers.append({
+                table_of_outliers = pd.concat([table_of_outliers, pd.DataFrame({
                     'variable': variable,
                     'percentage': cycle_variables[variable].count() / (
                                 len(cycle_variables[variable]) - (1 * len(cycle_variables['lineage_ID'].unique())))
-                }, ignore_index=True)
+                }, index=[len(table_of_outliers)])])
+                # table_of_outliers = table_of_outliers.append({
+                #     'variable': variable,
+                #     'percentage': cycle_variables[variable].count() / (
+                #                 len(cycle_variables[variable]) - (1 * len(cycle_variables['lineage_ID'].unique())))
+                # }, ignore_index=True)
 
                 if self.args['check']:
                     print(variable, cycle_variables[variable].count() / len(cycle_variables[variable]))
@@ -1172,11 +1172,11 @@ class SM:
 
             # Save the raw data
             self.raw_data.to_csv(
-                self.args['source_raw_data'] + r'/raw_data_all_in_one.csv', index=False
+                self.args['source_raw_data'] + f'{slash}raw_data_all_in_one.csv', index=False
             )
         else:  # Noisified data
-            # # Save the noisified raw data
-            # noise_raw_data = os.path.dirname(self.args['raw_data']) + r'/' + f'type_of_noise_{ton}_amount_of_noise_{aon}'
+            # Save the noisified raw data
+            noise_raw_data = os.path.dirname(self.args['source_raw_data']) + f"""{slash}type_of_noise_{self.args['type_of_noise']}_amount_of_noise_{self.args['amount_of_noise']}"""
 
             # Save the raw data
             self.raw_data.to_csv(
@@ -1226,12 +1226,14 @@ def run_script(argums):
         print('*' * 200)
 
 
-def main(tof=[], aof=[], check=False, ds_names=dataset_names, **kwargs):
+def main(tof=None, aof=None, check=False, ds_names=dataset_names, **kwargs):
     """ Create the csv files for physical, trace-centered, and trap-centered units for MM and SM data """
     for data_origin in ds_names:  # For all the experiments process the raw data
         print(data_origin)
 
         """
+        tof ==> Type of noise, ie. additive or multiplicative
+        aof ==> Amount of noise in micrometer units
         check ==> Print on the command line progress on the analysis
         data_origin ==> Name of the dataset we are analysing
         raw_data ==> Where the folder containing the raw data for this dataset is
@@ -1249,96 +1251,30 @@ def main(tof=[], aof=[], check=False, ds_names=dataset_names, **kwargs):
             'without_outliers': kwargs['without_outliers'](data_origin)
         }
 
-        create_folder(arguments['processed_data'])
-        create_folder(arguments['without_outliers'])
+        # create_folder(arguments['processed_data'])
+        # create_folder(arguments['without_outliers'])
 
         # Making the raw, processed and without_outliers arguments for noise or no noise
         if (arguments['type_of_noise'] is None) & (arguments['amount_of_noise'] is None):  # Not using any noise
 
             # Make sure the folders where we place the data are created already
-            create_folder(arguments['raw_data'])
-            # create_folder(arguments['processed_data'])
-            # create_folder(arguments['without_outliers'])
-        # else:  # Using noise
-        #
-        #     # arguments.update({
-        #     #     'processed_data': os.path.dirname(os.path.dirname(
-        #     #         os.path.abspath(
-        #     #             __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}{tof}_{aof}{slash}',
-        #     #     'without_outliers': os.path.dirname(os.path.dirname(os.path.abspath(
-        #     #         __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}{tof}_{aof}{slash}z_score_under_3'
-        #     # })
-        #
-        #     # arguments.update({
-        #     #     'processed_data': kwargs['processed_data'](data_origin),
-        #     #     'without_outliers': kwargs['without_outliers'](data_origin)
-        #     # })
-        #
-        #     # # Make sure the folders where we place the data are created already
-        #     # create_folder(arguments['processed_data'])
-        #     # create_folder(arguments['without_outliers'])
+            create_folder(arguments['source_raw_data'])
+            create_folder(arguments['processed_data'])
+            create_folder(arguments['without_outliers'])
+        else:  # Using noise
+        
+            arguments.update({
+                'processed_data': os.path.dirname(os.path.dirname(
+                    os.path.abspath(
+                        __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}{tof}_{aof}{slash}',
+                'without_outliers': os.path.dirname(os.path.dirname(os.path.abspath(
+                    __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}{tof}_{aof}{slash}z_score_under_3'
+            })
+        
+            # Make sure the folders where we place the data are created already
+            create_folder(arguments['processed_data'])
+            create_folder(arguments['without_outliers'])
 
         # Running script for these arguments
         run_script(arguments)
-
-    # exit()
-
-    # """ Create the csv files for physical, trace-centered, and trap-centered units for MM and SM data """
-    # for data_origin in ds_names:  # For all the experiments process the raw data
-    #     print(data_origin)
-    #
-    #     for tof, aof in zip(types_of_noise, amount_of_noise):
-    #
-    #         print(tof, aof)
-    #
-    #         """
-    #         check ==> Print on the command line progress on the analysis
-    #         data_origin ==> Name of the dataset we are analysing
-    #         raw_data ==> Where the folder containing the raw data for this dataset is
-    #         processed_data ==> The folder we will put the processed data in
-    #         without_outliers ==> The path to save all the dataframes with (pooled ensemble) outliers taken out
-    #         """
-    #         arguments = {
-    #             'check': check,
-    #             'data_origin': data_origin,
-    #             'type_of_noise': tof,
-    #             'amount_of_noise': aof,
-    #             'source_raw_data': os.path.dirname(os.path.dirname(
-    #                 os.path.abspath(__file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}RawData{slash}'
-    #         }
-    #
-    #         # Making the raw, processed and without_outliers arguments for noise or no noise
-    #         if (arguments['type_of_noise'] is None) & (arguments['amount_of_noise'] is None):  # Not using any noise
-    #
-    #             arguments.update({
-    #                 'raw_data': os.path.dirname(os.path.dirname(
-    #                     os.path.abspath(__file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}RawData{slash}',
-    #                 'processed_data': os.path.dirname(os.path.dirname(
-    #                     os.path.abspath(
-    #                         __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}ProcessedData{slash}',
-    #                 'without_outliers': os.path.dirname(os.path.dirname(os.path.abspath(
-    #                     __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}ProcessedData{slash}z_score_under_3'
-    #             })
-    #
-    #             # Make sure the folders where we place the data are created already
-    #             create_folder(arguments['raw_data'])
-    #             create_folder(arguments['processed_data'])
-    #             create_folder(arguments['without_outliers'])
-    #         else:  # Using noise
-    #
-    #             arguments.update({
-    #                 'processed_data': os.path.dirname(os.path.dirname(
-    #                     os.path.abspath(
-    #                         __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}{tof}_{aof}{slash}',
-    #                 'without_outliers': os.path.dirname(os.path.dirname(os.path.abspath(
-    #                     __file__))) + f'{slash}Datasets{slash}' + data_origin + f'{slash}{tof}_{aof}{slash}z_score_under_3'
-    #             })
-    #
-    #             # Make sure the folders where we place the data are created already
-    #             create_folder(arguments['processed_data'])
-    #             create_folder(arguments['without_outliers'])
-    #
-    #         # Running script for these arguments
-    #         run_script(arguments)
-    #
-    #     # exit()
+    print('process_rawdata_main finished!')

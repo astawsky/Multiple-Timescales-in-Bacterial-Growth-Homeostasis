@@ -26,7 +26,7 @@ def main(**kwargs):
             scaling_exponents['experiment'] = name
 
             # Append it to the one contains all experiments
-            se = se.append(scaling_exponents, ignore_index=True)
+            se = pd.concat([se, scaling_exponents], ignore_index=True)
 
     condition = (se['dataset'] == 'Trace') & (se['kind'] == 'dfa (short)')  # Only plot the trace lineages
     # condition2 = (se['dataset'] == 'Shuffled') & (se['kind'] == 'dfa (short)')  # Only plot the artificial lineages

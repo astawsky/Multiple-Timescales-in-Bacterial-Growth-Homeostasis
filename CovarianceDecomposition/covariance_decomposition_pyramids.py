@@ -23,8 +23,6 @@ def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_
             for param_2 in variables:
                 if param_1 in memory:
                     continue
-                # else:
-                #     print(param_1, param_2)
                 
                 normalization = (phys[param_1].std(ddof=1) * phys[param_2].std(ddof=1))
                 

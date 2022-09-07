@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
-
+from typing import Iterable
 import pandas as pd
 import seaborn as sns
 import numpy as np
 import os
 from sys import platform
+from random import sample, uniform
+from itertools import combinations
+from random import choices
+from scipy.stats import pearsonr
+import matplotlib.pyplot as plt
+
 
 """ create a folder with the name of the string inputted """
 
 
-def create_folder(filename):
+def create_folder(filename: str):
     # create the folder if not created already
     try:
         # Create target Directory
@@ -23,7 +29,7 @@ def create_folder(filename):
 """ Returns dataframe with same size containing the time-averages of each phenotypic variable instead of the local value """
 
 
-def get_time_averages_df(info, phenotypic_variables):  # MM
+def get_time_averages_df(info: pd.DataFrame, phenotypic_variables: list):  # MM
     
     # We keep the trap means here
     means_df = pd.DataFrame(columns=['lineage_ID', 'max_gen', 'generation'] + phenotypic_variables)
@@ -41,7 +47,7 @@ def get_time_averages_df(info, phenotypic_variables):  # MM
         }
         to_add.update({param: [np.mean(lineage[param]) for _ in np.arange(len(lineage))] for param in phenotypic_variables})
         to_add = pd.DataFrame(to_add)
-        means_df = means_df.append(to_add, ignore_index=True).reset_index(drop=True)
+        means_df = pd.concat([means_df, to_add], ignore_index=True).reset_index(drop=True) #  means_df.append(to_add, ignore_index=True).reset_index(drop=True)
     
     assert len(info) == len(means_df)
     
@@ -51,7 +57,7 @@ def get_time_averages_df(info, phenotypic_variables):  # MM
 """ shuffle the generations inside a lineage to destroy inter-generational correlations """
 
 
-def shuffle_lineage_generations(df, mm):
+def shuffle_lineage_generations(df: pd.DataFrame, mm: bool):
     if mm:
         
         # This is where we will keep all the data and later save as a csv
@@ -90,32 +96,6 @@ def shuffle_lineage_generations(df, mm):
                     
                     # adds it to the dataframe
                     no_epi_df = no_epi_df.append(new_lineage, ignore_index=True)
-                
-                # exit()
-                #
-                # # With these we mask the dataframes to get the values we want, mainly a lineage's empirical time-average and standard deviation
-                # trace_mask = (df['dataset'] == dataset) & (df['trap_ID'] == trap_id) & (df['trace'] == trace)
-                #
-                # # how many generations we have in this lineage
-                # max_gen = len(df[trace_mask])
-                #
-                # # What we are going to add to the
-                # to_add = {
-                #     'dataset': [dataset for _ in range(max_gen)],
-                #     'trap_ID': [trap_id for _ in range(max_gen)],
-                #     'trace': [trace for _ in range(max_gen)],
-                #     'generation': np.arange(max_gen)
-                # }
-                #
-                # # shuffle the lineage generations so epigenetic MD memory is lessened and or destroyed
-                # shuffled = df[trace_mask].sample(frac=1, replace=False).reset_index(drop=True)
-                #
-                # # creates the iid array of samples from every cycle variableeter lineage distribution
-                # for variable in phenotypic_variables:
-                #     to_add.update({variable: shuffled[variable]})
-                #
-                # # adds it to the dataframe
-                # no_epi_df = no_epi_df.append(pd.DataFrame(to_add), ignore_index=True)
     
     # Reset the index as a matter of cleanliness since we are not gonna work with it anyways
     return no_epi_df.reset_index(drop=True)
@@ -124,7 +104,7 @@ def shuffle_lineage_generations(df, mm):
 """ truncate all lineages in a dataframe to the min_gens parameter """
 
 
-def limit_lineage_length(df, min_gens):
+def limit_lineage_length(df: pd.DataFrame, min_gens: int):
     new_df = pd.DataFrame(columns=df.columns)
     for dataset in df['dataset'].unique():
         for trap_id in df[(df['dataset'] == dataset)]['trap_ID'].unique():
@@ -150,7 +130,7 @@ def limit_lineage_length(df, min_gens):
 """ Feed in a dataframe of our format and subtract the time-averages of each lineage """
 
 
-def trace_center_a_dataframe(df, mm):
+def trace_center_a_dataframe(df: pd.DataFrame, mm: bool):
     # Trace-centered dataframe
     tc_df = pd.DataFrame(columns=df.columns)
     
@@ -162,7 +142,7 @@ def trace_center_a_dataframe(df, mm):
             new_lineage['lineage_ID'] = lin_id
             new_lineage['generation'] = np.arange(len(lineage))
             
-            tc_df = tc_df.append(new_lineage, ignore_index=True)
+            tc_df = pd.concat([tc_df, new_lineage], ignore_index=True)  # tc_df.append(new_lineage, ignore_index=True)
     else:
         for dataset in df['dataset'].unique():
             for trap_id in df[df['dataset'] == dataset]['trap_ID'].unique():
@@ -177,7 +157,7 @@ def trace_center_a_dataframe(df, mm):
                     new_lineage['lineage_ID'] = lineage['lineage_ID'].unique()[0]
                     new_lineage['generation'] = np.arange(len(lineage))
                     
-                    tc_df = tc_df.append(new_lineage, ignore_index=True)
+                    tc_df = pd.concat([tc_df, new_lineage], ignore_index=True)  # tc_df.append(new_lineage, ignore_index=True)
     
     return tc_df
 
@@ -185,42 +165,7 @@ def trace_center_a_dataframe(df, mm):
 """ Create all information dataframe where the lineage lengths are kept constant but the cells in the trace itself are randomly sampled from the population without replacement """
 
 
-def shuffle_info_OLD(info):
-    # Give it a name, contains S, NL
-    new_info = pd.DataFrame(columns=info.columns)
-    
-    # what is the trace length of each trace? This is the only thing that stays the same
-    sizes = {'{} {} {}'.format(dataset, trap_ID, trace): len(info[(info['trap_ID'] == trap_ID) & (info['trace'] == trace) & (info['dataset'] == dataset)]) for dataset in np.unique(info['dataset']) for
-             trap_ID in np.unique(info[info['dataset'] == dataset]['trap_ID']) for trace in ['A', 'B']}
-    
-    for dataset in np.unique(info['dataset']):
-        for trap_ID in np.unique(info[info['dataset'] == dataset]['trap_ID']):
-            for trace in ['A', 'B']:
-                # trace length
-                size = sizes['{} {} {}'.format(dataset, trap_ID, trace)]
-                
-                # sample from the old dataframe
-                samples = info.sample(replace=False, n=size)
-                
-                # drop what we sampled
-                info = info.drop(index=samples.index)
-                
-                # add some correct labels even though they don't matter so that the dataframe structure is still intact
-                samples['trap_ID'] = trap_ID
-                samples['trace'] = trace
-                samples['generation'] = np.arange(size)
-                samples['dataset'] = dataset
-                
-                # add them to the new, shuffled dataframe
-                new_info = new_info.append(samples, ignore_index=True)
-    
-    return new_info
-
-
-""" Create all information dataframe where the lineage lengths are kept constant but the cells in the trace itself are randomly sampled from the population without replacement """
-
-
-def shuffle_info(info, mm):
+def shuffle_info(info: pd.DataFrame, mm: bool):
     # Give it a name, contains S, NL
     new_info = pd.DataFrame(columns=info.columns)
     
@@ -243,7 +188,7 @@ def shuffle_info(info, mm):
             samples['generation'] = np.arange(size)
             
             # add them to the new, shuffled dataframe
-            new_info = new_info.append(samples, ignore_index=True)
+            new_info = pd.concat([new_info, samples], ignore_index=True)  # new_info.append(samples, ignore_index=True)
     else:
         sizes = {'{} {} {}'.format(dataset, trap_ID, trace): len(info[(info['trap_ID'] == trap_ID) & (info['trace'] == trace) & (info['dataset'] == dataset)]) for dataset in np.unique(info['dataset'])
                  for
@@ -270,7 +215,7 @@ def shuffle_info(info, mm):
                     samples['generation'] = np.arange(size)
                     
                     # add them to the new, shuffled dataframe
-                    new_info = new_info.append(samples, ignore_index=True)
+                    new_info = pd.concat([new_info, samples], ignore_index=True)  # new_info.append(samples, ignore_index=True)
                     
                     # Go on to the next ID
                     lineage_id += 1
@@ -290,9 +235,7 @@ def seaborn_preamble():
 """ set of bootstrapped pearson correlations """
 
 
-def boot_pearson(x, y, number_of_straps):
-    from random import choices
-    from scipy.stats import pearsonr
+def boot_pearson(x: Iterable, y: Iterable, number_of_straps: int):
     x = np.array(x)
     y = np.array(y)
     r_array = []
@@ -307,7 +250,7 @@ def boot_pearson(x, y, number_of_straps):
 """ We use this to cut any lineage-processed dataframe, ie. '.../phyiscal_units.csv' and '.../trace_centered.csv' so that the A and B pairs have the same lineage length """
 
 
-def cut_uneven_pairs(info):
+def cut_uneven_pairs(info: pd.DataFrame):
     # Correct for traces that aren't the same size
     old_info = info.copy()
     new_info = pd.DataFrame(columns=info.columns)
@@ -336,8 +279,8 @@ def cut_uneven_pairs(info):
                 raise IOError()
             
             # save them to a new dataframe
-            new_info = new_info.append(a_to_add, ignore_index=True)
-            new_info = new_info.append(b_to_add, ignore_index=True)
+            new_info = pd.concat([new_info, a_to_add], ignore_index=True)
+            new_info = pd.concat([new_info, b_to_add], ignore_index=True)
         
         # good practice
         new_info = new_info.reset_index(drop=True)
@@ -348,9 +291,7 @@ def cut_uneven_pairs(info):
 """ Create and add the Control dataset """
 
 
-def add_control(old_info):
-    from random import sample, uniform
-    from itertools import combinations
+def add_control(old_info: pd.DataFrame):
     
     # Choose randomly combinations of trap IDs
     possible_combos = sample(list(combinations(np.unique(old_info['trap_ID']), 2)), 85)
@@ -394,10 +335,7 @@ def add_control(old_info):
     return info
 
 
-def add_control_and_cut_extra_intervals(info):
-    from random import sample, uniform
-    from itertools import combinations
-    
+def add_control_and_cut_extra_intervals(info: pd.DataFrame):
     """
     Here we will create the Control dataset and equal the length of pair lineages.
     """
@@ -468,7 +406,7 @@ def add_control_and_cut_extra_intervals(info):
     return new_info
 
 
-def pool_experiments(group, name, outliers=True, dimensions='pu'):
+def pool_experiments(group: Iterable, name: str, outliers: bool = True, dimensions: str = 'pu'):
     pooled = pd.DataFrame()
     
     for exp in group:
@@ -490,8 +428,7 @@ def pool_experiments(group, name, outliers=True, dimensions='pu'):
 """ check the precision of the division events and growth fits """
 
 
-def check_the_division(data_origin_name, lineages=[], raw_lineages=[], raw_indices=[], pu=[], ax=[], **kwargs):
-    import matplotlib.pyplot as plt
+def check_the_division(data_origin_name: str, lineages: list = [], raw_lineages: list = [], raw_indices: list = [], pu: list = [], ax: list = [], **kwargs):
     
     # lineage, cycle_variables_lineage, start_indices, end_indices, raw_lineage, non_positives, singularities, rises, raw_start, raw_end, step_size, total_nans
     
@@ -581,7 +518,7 @@ def check_the_division(data_origin_name, lineages=[], raw_lineages=[], raw_indic
 """ Retrieve the local directory of the datasets """
 
 
-def retrieve_dataframe_directory(ds_to_take_from, kind_of_dataframe, include_outliers=True):
+def retrieve_dataframe_directory(ds_to_take_from: str, kind_of_dataframe: str, include_outliers: bool = True):
     """
     
     :param ds_to_take_from: 'Pooled_SM', 'Maryam_LongTraces', etc...

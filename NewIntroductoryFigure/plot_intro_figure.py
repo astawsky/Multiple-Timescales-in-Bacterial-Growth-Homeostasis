@@ -51,16 +51,6 @@ def shuffle_info_sm(info):
     return new_info
 
 
-# def plot_neighbor_raw_data(ax, **kwargs):
-#     raw_lineages = pd.read_csv(kwargs['raw_data']('Pooled_SM') + 'raw_data_all_in_one.csv')
-#     a_trace = raw_lineages[raw_lineages['lineage_ID'] == 1].copy().sort_values('time').reset_index(drop=True)
-#     b_trace = raw_lineages[raw_lineages['lineage_ID'] == 2].copy().sort_values('time').reset_index(drop=True)
-#
-#     ax.plot(a_trace['time'].values, a_trace['length'].values, label='A')
-#     ax.plot(b_trace['time'].values, b_trace['length'].values, label='B')
-#     ax.legend()
-
-
 def possible_nl_lineages(**kwargs):
     # 133 ( GOOD COORDINATION ), 315, 91, 341, 311, 111 --> Possible NL lineages
 
@@ -72,18 +62,6 @@ def possible_nl_lineages(**kwargs):
 
     print('min\n', ta[mask].sort_values('length_birth', ascending=True)[['lineage_ID', 'max_gen']])
     print('max\n', ta[mask].sort_values('length_birth', ascending=False)[['lineage_ID', 'max_gen']])
-    # exit()
-    #
-    # print(ta.columns)
-    # print(pu.columns)
-    # mask = ta['lineage_ID'].isin(pu[pu['dataset'] == 'NL'].lineage_ID.values)
-    # print(len(ta[(ta['lineage_ID'] % 2 == 0) & mask].max_gen.values))
-    #
-    # updated = ta[(ta['lineage_ID'] % 2 == 0) & mask]
-    #
-    # print(updated.sort_values('max_gen').lineage_ID.values)
-    # updated1 = ta[(ta['lineage_ID'] % 2 == 1) & mask]
-    # print(updated1.sort_values('max_gen').lineage_ID.values)
 
 
 def plot_nl_length_birth_in_gentime_and_avg(num, ax, **kwargs):
@@ -122,7 +100,6 @@ def the_hists(num, ax, **kwargs):
 def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
     # The dataframe with all the experiments in it
     total_df = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + 'physical_units_without_outliers.csv')
-    # total_df = pd.read_csv(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + f'/Datasets/Pooled_SM/{kwargs["noise_index"].split("_").join("_")}ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
 
     # Check what type of pair lineages we want to look at
     if lin_type == 'NL':
@@ -166,13 +143,13 @@ def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
                 lin = trap_ensemble[(trap_ensemble['trace'] == trace)].copy()  # All the bacteria in this trap
 
                 # Add the deviation, for all generations in this lineage, of the mean of this experiment from the mean of the pooled ensemble
-                trap = trap.append(lin[variables].count() * ((trap_mean - pooled_pu_mean) ** 2), ignore_index=True)
+                trap = pd.concat([trap, lin[variables].count() * ((trap_mean - pooled_pu_mean) ** 2)], ignore_index=True)
 
                 # Add the deviation, for all generations in this lineage, of the mean of this trap from the mean of this experiment
-                lin_spec = lin_spec.append(lin[variables].count() * ((lin[variables].mean() - trap_mean) ** 2), ignore_index=True)
+                lin_spec = pd.concat([lin_spec, lin[variables].count() * ((lin[variables].mean() - trap_mean) ** 2)], ignore_index=True)
 
                 # Add the deviation of all the generation-specific values around the lineage mean
-                delta = delta.append(((lin[variables] - lin[variables].mean()) ** 2).sum(), ignore_index=True)
+                delta = pd.concat([delta, ((lin[variables] - lin[variables].mean()) ** 2).sum()], ignore_index=True)
 
         # Calculate the variance for each term with one degree of freedom
         trap_var = trap.sum() / (pu[variables].count() - 1)
@@ -186,31 +163,39 @@ def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
         for variable in variables:
 
             # For every phenotypic variable, add its variance decomposition to the dataframe
-            output_df = output_df.append({
+            output_df = pd.concat([output_df, pd.DataFrame({
                 'variable': symbols['physical_units'][variable],  # Latex of the variable (Useful for plotting)
                 'Trap+Lin': (trap_var[variable] + lin_var[variable]) / pu[variable].var(),  # Variance explained by the trap and experiment
                 'Trap': (trap_var[variable]) / pu[variable].var(),  # Variance explained by the experiment
                 'kind': kind
-            }, ignore_index=True)
+            }, index=[len(output_df)])], ignore_index=True)
+            # output_df = output_df.append({
+            #     'variable': symbols['physical_units'][variable],  # Latex of the variable (Useful for plotting)
+            #     'Trap+Lin': (trap_var[variable] + lin_var[variable]) / pu[variable].var(),  # Variance explained by the trap and experiment
+            #     'Trap': (trap_var[variable]) / pu[variable].var(),  # Variance explained by the experiment
+            #     'kind': kind
+            # }, ignore_index=True)
 
     for spacer in ['', ' ', '  ', '   ', '    ']:  # For graphical purposes to distinguish each type of variable (size, growth and dimensionless)
-        output_df = output_df.append({
+        output_df = pd.concat([output_df, pd.DataFrame({
             'variable': spacer,
             'Trap+Lin': 0,
             # This is so we can graph it nicely
             'Trap': 0,
             'kind': 'NA'
-        }, ignore_index=True)
+        }, index=[len(output_df)])], ignore_index=True)
+        # output_df = output_df.append({
+        #     'variable': spacer,
+        #     'Trap+Lin': 0,
+        #     # This is so we can graph it nicely
+        #     'Trap': 0,
+        #     'kind': 'NA'
+        # }, ignore_index=True)
 
     # The order we want them to appear in
     real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
                            symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
                            symbols['physical_units']['added_length'], '  ', '   '])
-
-    # # The order they appear in
-    # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-    #               symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-    #               symbols['physical_units']['growth_rate'], '   ']
 
     # Fill in the grey area of the noise
     plt.fill_between(real_order,

@@ -85,13 +85,20 @@ def create_the_dataframe(**kwargs):
                     # Calculate the pearson correlation
                     r = 1 if (distance == 0) and (var_old == var_young) else pearsonr(relevant[var_old].loc[old_indices], relevant[var_young].loc[young_indices])[0]
                     
-                    corr_df = corr_df.append({
+                    corr_df = pd.concat([corr_df, pd.DataFrame({
                         'var_old': var_old,
                         'var_young': var_young,
                         'distance': distance,
                         'centered': centered,
                         'r': r
-                    }, ignore_index=True)  # Add it to the dataframe we will save
+                    }, index=[len(corr_df)])], ignore_index=True)  # Add it to the dataframe we will save
+                    # corr_df = corr_df.append({
+                    #     'var_old': var_old,
+                    #     'var_young': var_young,
+                    #     'distance': distance,
+                    #     'centered': centered,
+                    #     'r': r
+                    # }, ignore_index=True)  # Add it to the dataframe we will save
     
     corr_df.to_csv(f'IntergenerationalCorrelations{slash}intergenerational_df{kwargs["noise_index"]}.csv', index=False)  # Save it so we do not do it again
 

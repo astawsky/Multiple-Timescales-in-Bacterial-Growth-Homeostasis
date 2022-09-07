@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import os
+
 
 """ Create all information dataframe where the lineage lengths are kept constant but the cells in the trace itself are randomly sampled from the population without replacement """
 
@@ -56,8 +56,6 @@ def shuffle_info_sm(info):
 def mm_lineage_experiment(chosen_datasets, ax, loc='upper left', **kwargs):
     total_df = pd.DataFrame()  # pool all the experiments
     for data_origin in chosen_datasets:
-        # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
-
         pu = kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv'
 
         pu = pd.read_csv(pu)
@@ -204,10 +202,6 @@ def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='up
     # Pool all the experiments and add a category label
     for data_origin in sm_ds[:-1]:
         print(data_origin)
-        
-        # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
-        
-        # pu = pd.read_csv(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv')
 
         pu = pd.read_csv(kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv')
         
@@ -301,51 +295,6 @@ def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='up
             'Exp': 0,
             'kind': 'NA'
         }, ignore_index=True)
-
-    # output_df = output_df.append({
-    #     'variable': '',
-    #     'Exp+Trap': 0,
-    #     'Exp+Trap+Lin': 0,
-    #     # This is so we can graph it nicely
-    #     'Exp': 0,
-    #     'kind': 'NA'
-    # }, ignore_index=True)
-    #
-    # output_df = output_df.append({
-    #     'variable': ' ',
-    #     'Exp+Trap': 0,
-    #     'Exp+Trap+Lin': 0,
-    #     # This is so we can graph it nicely
-    #     'Exp': 0,
-    #     'kind': 'NA'
-    # }, ignore_index=True)
-    #
-    # output_df = output_df.append({
-    #     'variable': '  ',
-    #     'Exp+Trap': 0,
-    #     'Exp+Trap+Lin': 0,
-    #     # This is so we can graph it nicely
-    #     'Exp': 0,
-    #     'kind': 'NA'
-    # }, ignore_index=True)
-    #
-    # output_df = output_df.append({
-    #     'variable': '   ',
-    #     'Exp+Trap': 0,
-    #     'Exp+Trap+Lin': 0,
-    #     # This is so we can graph it nicely
-    #     'Exp': 0,
-    #     'kind': 'NA'
-    # }, ignore_index=True)
-    #
-    # output_df = output_df.append({
-    #     'variable': '    ',
-    #     'Exp+Trap': 0,
-    #     'Exp+Trap+Lin': 0,
-    #     # This is so we can graph it nicely
-    #     'Exp': 0,
-    #     'kind': 'NA'
-    # }, ignore_index=True)
     
     # The order we want them to appear in
     real_order = np.array(['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
@@ -383,7 +332,6 @@ def mm_traps(chosen_datasets, ax, loc='upper left', **kwargs):
     for data_origin in chosen_datasets:
         print(data_origin)
         pu = kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv'
-        # pu = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/Datasets/' + data_origin + '/ProcessedData/z_score_under_3/physical_units_without_outliers.csv'
         pu = pd.read_csv(pu)
         
         # Give them the experiment category
@@ -474,11 +422,6 @@ def mm_traps(chosen_datasets, ax, loc='upper left', **kwargs):
     real_order = ['', symbols['physical_units']['growth_rate'], symbols['physical_units']['generationtime'], symbols['physical_units']['fold_growth'],
                   symbols['physical_units']['division_ratio'], symbols['physical_units']['div_and_fold'], ' ', symbols['physical_units']['length_birth'],
                   symbols['physical_units']['added_length'], '  ', '   ']
-    
-    # # The order we want them to appear in
-    # real_order = ['', symbols['physical_units']['div_and_fold'], symbols['physical_units']['division_ratio'], symbols['physical_units']['fold_growth'], ' ',
-    #               symbols['physical_units']['added_length'], symbols['physical_units']['length_birth'], '  ', symbols['physical_units']['generationtime'],
-    #               symbols['physical_units']['growth_rate'], '   ']
     
     # Conditions for the grey noise area from the variance decomposition of the artificial lineages
     conds = (output_df['kind'] == 'Artificial') & (~output_df['variable'].isin(['', ' ', '  ', '   ']))

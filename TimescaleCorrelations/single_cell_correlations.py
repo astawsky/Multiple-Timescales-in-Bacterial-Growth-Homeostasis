@@ -149,7 +149,7 @@ def other(args):
                 pcorr = np.round(pearsonr(col_array, row_array)[0], 2)  # The pearson correlation into a string with a precision of two decimal points
                 slope, intercept, _, _, std_err = linregress(col_array, row_array)  # The linear regression
                 
-                output_df = output_df.append({
+                output_df = pd.concat([output_df, pd.DataFrame({
                     'var1': var1,
                     'var2': var2,
                     'timescale': label,
@@ -158,7 +158,17 @@ def other(args):
                     'intercept': intercept,
                     'std_error': std_err,
                     'dataset': ds
-                }, ignore_index=True)
+                }, index=[len(output_df)])], ignore_index=True)
+                # output_df = output_df.append({
+                #     'var1': var1,
+                #     'var2': var2,
+                #     'timescale': label,
+                #     'correlation': pcorr,
+                #     'slope': slope,
+                #     'intercept': intercept,
+                #     'std_error': std_err,
+                #     'dataset': ds
+                # }, ignore_index=True)
         
         return output_df
     
@@ -170,8 +180,8 @@ def other(args):
     time_averages = time_averages[time_averages['max_gen'] > 15]  # Only use lineages with more than 15 generations each
     
     output_df = get_df(physical_units, 'physical units', args['data_origin'], phenotypic_variables)
-    output_df = output_df.append(get_df(time_averages, 'long', args['data_origin'], phenotypic_variables), ignore_index=True).reset_index(drop=True)
-    output_df = output_df.append(get_df(trace_centered, 'short', args['data_origin'], phenotypic_variables), ignore_index=True).reset_index(drop=True)
+    output_df = pd.concat([output_df, get_df(time_averages, 'long', args['data_origin'], phenotypic_variables)], ignore_index=True).reset_index(drop=True)
+    output_df = pd.concat([output_df, get_df(trace_centered, 'short', args['data_origin'], phenotypic_variables)], ignore_index=True).reset_index(drop=True)
     
     return output_df
 
@@ -205,7 +215,7 @@ def initial_run(**kwargs):
 
         primary(args, **kwargs)
 
-        ds_df = ds_df.append(other(args), ignore_index=True)
+        ds_df = pd.concat([ds_df, other(args)], ignore_index=True)
 
         print('*' * 200)
 
