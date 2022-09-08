@@ -7,7 +7,10 @@ import seaborn as sns
 from AnalysisCode.global_variables import phenotypic_variables, symbols, get_time_averages_df, slash
 
 
-def pyramid_of_pairwise_covariances(pu, ta, tc, fig, axes, variables=phenotypic_variables, figurename='covariance decomposition, main variables', annot=True, **kwargs):
+def pyramid_of_pairwise_covariances(
+    pu: pd.DataFrame, ta: pd.DataFrame, tc: pd.DataFrame, fig, axes, variables: list = phenotypic_variables,
+    figurename: str = 'covariance decomposition, main variables', annot: bool = True, **kwargs
+):
     # Normalize the trace-centered or time-averages correlation by the pooled ensemble standard deviations
     def normalize_correlation(phys, variables):
         # The pooled mean

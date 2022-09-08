@@ -90,13 +90,8 @@ def kde_scatterplot_variables(df, var1, var2, num, ax, line_func=[], line_label=
 
 
 def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
-    # x_a = [df[(df['trap_ID'] == trap_id) & (df['trace'] == 'A') & (df['dataset'] == 'NL')][var1].mean() for trap_id in df[(df['dataset'] == 'NL')].trap_ID.unique()]
-    # y_b = [df[(df['trap_ID'] == trap_id) & (df['trace'] == 'B') & (df['dataset'] == 'NL')][var2].mean() for trap_id in df[(df['dataset'] == 'NL')].trap_ID.unique()]
     x_a = []
     y_b = []
-    
-    # diagonal_length = []
-    # offdiagonal_length = []
     
     for trap_id in df[(df['dataset'] == 'NL')].trap_ID.unique():
         lin_a = df[(df['trap_ID'] == trap_id) & (df['trace'] == 'A') & (df['dataset'] == 'NL')].copy()
@@ -121,18 +116,6 @@ def plot_pair_scatterplots(df, var1, var2, ax, sym1=None, sym2=None):
     
     ax.plot(np.linspace(center - diag_spead, center + diag_spead), np.linspace(center - diag_spead, center + diag_spead), ls='-', c='k', linewidth=3)
     ax.plot(np.linspace(center - off_spread, center + off_spread), - np.linspace(center - off_spread, center + off_spread) + 2 * center, ls='-', c='k', linewidth=3)
-    
-    # slope, intercept = linregress(x_a, y_b)[:2]
-    # low_x, low_y = np.mean(x_a) - np.std((np.array(y_b)+np.array(x_a))/2), np.mean(y_b) - np.std(np.array(y_b)-(intercept+slope*np.array(x_a)))
-    # high_x, high_y = np.mean(x_a) + np.std((np.array(y_b)+np.array(x_a))/2), np.mean(y_b) + np.std(np.array(y_b)-(intercept+slope*np.array(x_a)))
-    #
-    # diag_low, diag_high = np.mean(x_a) - np.std((np.array(y_b)+np.array(x_a))/2), np.mean(x_a) + np.std((np.array(y_b)+np.array(x_a))/2)
-    #
-    # new_int = (np.mean(y_b) + np.mean(x_a) / slope)
-    #
-    # ax.plot(np.linspace(low_x, high_x), intercept + slope * np.linspace(low_x, high_x), ls='-', c='k', linewidth=3)
-    #
-    # ax.plot(np.linspace((-low_y + new_int)*slope, (-high_y + new_int)*slope), (np.mean(y_b) + np.mean(x_a) / slope) - np.linspace((-low_y + new_int)*slope, (-high_y + new_int)*slope) / slope, ls='-', c='k', linewidth=3)
     
     x_a, y_b = list(x_a), list(y_b)
     

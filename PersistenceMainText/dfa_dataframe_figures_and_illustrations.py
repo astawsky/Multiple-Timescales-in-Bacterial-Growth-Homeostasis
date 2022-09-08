@@ -10,7 +10,6 @@ import numpy as np
 import seaborn as sns
 from scipy.stats import linregress
 from itertools import combinations
-import os
 
 
 def dfa_short(lineage, min_ws, max_ws=None, window_size_steps=5, steps_between_windows=2):
@@ -319,11 +318,7 @@ def create_dfa_dataframe(**kwargs):
         
         print(data_origin)
         
-        # current_dir = 'PersistenceMainText'  # os.path.dirname(os.path.abspath(__file__))
-        
         create_folder(f'PersistenceMainText{slash}{data_origin}')
-        
-        # processed_data = os.path.dirname(current_dir) + '/Datasets/' + data_origin + '/ProcessedData/'
         
         """
         data_origin ==> Name of the dataset we are analysing
@@ -336,7 +331,6 @@ def create_dfa_dataframe(**kwargs):
             # Data singularities, long traces with significant filamentation, sudden drop-offs
             'Scaling_Exponents': f'PersistenceMainText{slash}{data_origin}',
             'LogLog_Recreation': f'PersistenceMainText{slash}{data_origin}',
-            # 'dataframes': current_dir + '/Dataframes/' + data_origin,
             'pu': kwargs['processed_data'](data_origin) + 'physical_units.csv'  # processed_data + '/physical_units.csv'
         }
         
@@ -345,10 +339,6 @@ def create_dfa_dataframe(**kwargs):
         df = pd.read_csv('{}/scaling_exponents.csv'.format(args['Scaling_Exponents']))
         
         plot_histograms_of_scaling_exponents(args['Scaling_Exponents'], df, **kwargs)
-        
-        # df = pd.read_csv('{}/loglog_scaling_recreation.csv'.format(args['LogLog_Recreation']))
-        #
-        # recreate_loglog_plots(df, args['LogLog_Recreation'], individuals=False)
 
     
 def plot_dfa_cumsum_illustration(ax, **kwargs):
@@ -429,13 +419,7 @@ def plot_loglog_lines(loglog_plot_recreation, ax):
                 # Add the analysis curve to the array of its dataset for the population regression
                 wss_array['Shuffled'] = np.append(wss_array['Shuffled'], wss)
                 ytr_array['Shuffled'] = np.append(ytr_array['Shuffled'], ytr)
-                
-                # # Include it in the legend but not more than once
-                # if set_shuffled_legend:
-                #     ax.plot(wss, ytr, color=color, marker='')
-                # else:
-                #     ax.plot(wss, ytr, color=color, marker='')  # , label='Shuffled'
-                #     set_shuffled_legend = True
+
             # We do not want to see the white noise
             else:
                 continue
@@ -448,14 +432,10 @@ def plot_loglog_lines(loglog_plot_recreation, ax):
         
         # Plot the best fit line and its parameters
         ax.plot(np.unique(wss_array['Trace']), [np.exp(intercept_trace) * (l ** slope_trace) for l in np.unique(wss_array['Trace'])], ls='--', color='blue',
-                linewidth=1, zorder=500, label=variable+f': ${np.round(slope_trace, 2)}$')  # label=r'$' + str(np.round(intercept_trace, 2)) + r'\, k^{' + str(np.round(slope_trace, 2)) + r'\pm' + str(np.round(std_err_trace, 3)) + r'}$'   ,    label='Trace'
+                linewidth=1, zorder=500, label=variable+f': ${np.round(slope_trace, 2)}$')
 
     ax.plot(np.arange(5, 83, dtype='int'), (.47/(5**.5)) * (np.arange(5, 83) ** .5), label=r'random: $.5$', ls='--', c='k')
-    # ax.plot(np.unique(wss_array['Shuffled']), [np.exp(intercept_art) * (l ** .5) for l in np.unique(wss_array['Shuffled'])], ls='--', color='red', linewidth=3,
-    #         label='Shuffled', zorder=100)  # label=r'$' + str(np.round(intercept_art, 2)) + r'\, k^{' + str(np.round(slope_art, 2)) + r'\pm' + str(np.round(std_err_art, 3)) + r'}$'
-    # ax.plot(np.unique(wss_array['Shuffled']), [np.exp(intercept_art) * (l ** slope_art) for l in np.unique(wss_array['Shuffled'])], ls='--', color='red', linewidth=3,
-    #         label='Shuffled', zorder=100)  # label=r'$' + str(np.round(intercept_art, 2)) + r'\, k^{' + str(np.round(slope_art, 2)) + r'\pm' + str(np.round(std_err_art, 3)) + r'}$'
-    
+
     # ax.title(variable)
     ax.set_ylabel(r'$F(k)$')
     ax.set_xlabel('k (window size)')
@@ -471,7 +451,6 @@ def plot_dfa_slopes(ax, **kwargs):
         
         print(ds)
         scaling_exponents = pd.read_csv(f'PersistenceMainText{slash}{ds}{slash}scaling_exponents{kwargs["noise_index"]}.csv')  # Import
-        # scaling_exponents = pd.read_csv(os.path.dirname(os.path.abspath(__file__)) + f'{slash}{ds}{slash}scaling_exponents.csv')  # Import
 
         scaling_exponents['experiment'] = ds  # Add their dataset name
         
@@ -493,14 +472,6 @@ def plot_dfa_slopes(ax, **kwargs):
     
 
 def main(**kwargs):
-
-    # # To calculate the dataframe with the correct analysis
-    # create_dfa_dataframe(**kwargs)
-
-    # current_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # recreation = pd.read_csv(current_dir + f'{slash}Pooled_SM{slash}loglog_scaling_recreation.csv')
-
     recreation = pd.read_csv(f'PersistenceMainText{slash}Pooled_SM{slash}loglog_scaling_recreation{kwargs["noise_index"]}.csv')
     recreation = recreation.replace(to_replace={r'$f_n e^{\phi_{n}}$': r'$r$'})
 

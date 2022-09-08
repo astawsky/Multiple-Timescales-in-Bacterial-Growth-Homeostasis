@@ -55,29 +55,6 @@ def create_the_dataframe(**kwargs):
                         
                         old_indices = np.append(old_indices, generations_possible[generations_possible['generation'].isin(valuable_gens)].index)
                         young_indices = np.append(young_indices, generations_possible[generations_possible['generation'].isin(valuable_gens + distance)].index)
-                        
-                        # for gen in generations_possible:
-                        #     # We did not measure or include the progeny
-                        #     if gen+distance not in generations_possible:
-                        #         # print('Was not possible.')
-                        #         continue
-                        #
-                        #     if centered:  # Do we center the values or not?
-                        #         old_value = pu[(pu['lineage_ID'] == lin_id) & (pu['generation'] == gen)][var_old].values - pu[(pu['lineage_ID'] == lin_id)][var_old].mean()
-                        #         young_value = pu[(pu['lineage_ID'] == lin_id) & (pu['generation'] == gen + distance)][var_young].values - pu[(pu['lineage_ID'] == lin_id)][var_young].mean()
-                        #     else:
-                        #         old_value = pu[(pu['lineage_ID'] == lin_id) & (pu['generation'] == gen)][var_old].values
-                        #         young_value = pu[(pu['lineage_ID'] == lin_id) & (pu['generation'] == gen + distance)][var_young].values
-                        #
-                        #     # Make sure neither value is a NaN
-                        #     if not np.isnan(old_value) and not np.isnan(young_value):
-                        #         old_array.append(old_value[0])
-                        #         young_array.append(young_value[0])
-                        #
-                        #     # print(gen)
-                        #     # print(old_array)
-                        #     # print(young_array)
-                        #     # print('---'*200)
                     
                     old_indices = old_indices.flatten()
                     young_indices = young_indices.flatten()
@@ -92,13 +69,6 @@ def create_the_dataframe(**kwargs):
                         'centered': centered,
                         'r': r
                     }, index=[len(corr_df)])], ignore_index=True)  # Add it to the dataframe we will save
-                    # corr_df = corr_df.append({
-                    #     'var_old': var_old,
-                    #     'var_young': var_young,
-                    #     'distance': distance,
-                    #     'centered': centered,
-                    #     'r': r
-                    # }, ignore_index=True)  # Add it to the dataframe we will save
     
     corr_df.to_csv(f'IntergenerationalCorrelations{slash}intergenerational_df{kwargs["noise_index"]}.csv', index=False)  # Save it so we do not do it again
 

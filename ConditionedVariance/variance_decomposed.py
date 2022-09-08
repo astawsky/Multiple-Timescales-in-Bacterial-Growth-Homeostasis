@@ -12,7 +12,7 @@ import os
 """ Create all information dataframe where the lineage lengths are kept constant but the cells in the trace itself are randomly sampled from the population without replacement """
 
 
-def shuffle_info_sm(info):
+def shuffle_info_sm(info: pd.DataFrame):
     # Give it a name, contains S, NL
     new_info = pd.DataFrame(columns=info.columns)
     
@@ -53,7 +53,7 @@ def shuffle_info_sm(info):
 """ variance decomposition for SM data conditioning on trap and lineage """
 
 
-def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
+def vd_with_trap_and_lineage(variables: list, lin_type: str, ax, **kwargs):
     # The dataframe with all the experiments in it
     total_df = pd.read_csv(kwargs['without_outliers']('Pooled_SM') + 'physical_units_without_outliers.csv')
 
@@ -163,7 +163,7 @@ def vd_with_trap_and_lineage(variables, lin_type, ax, **kwargs):
 """ variance decomposition for MM data conditioning on traps """
 
 
-def mm_traps(chosen_datasets, ax, **kwargs):
+def mm_traps(chosen_datasets: list, ax, **kwargs):
     
     # The dataframe with all the experiments in it
     total_df = pd.DataFrame()

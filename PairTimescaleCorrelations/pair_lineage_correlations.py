@@ -34,8 +34,6 @@ def run_it(args, **kwargs):
                 # So it looks presentable
                 ax.xaxis.set_major_formatter(FormatStrFormatter('%.2g'))
                 ax.yaxis.set_major_formatter(FormatStrFormatter('%.2g'))
-                # ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
-                # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
                 
                 if col > row:  # Upper diagonal entries are ignored
                     ax.set_frame_on(False)
@@ -109,10 +107,6 @@ def main(**kwargs):
 
     data_origin = 'Pooled_SM'  # Only sister machine data has the format for this analysis
 
-    # filepath = os.path.dirname(os.path.abspath(__file__))
-
-    # processed_data = os.path.dirname(filepath) + '/Datasets/' + data_origin + '/ProcessedData/'
-
     """
     data_origin ==> Name of the dataset we are analysing
     raw_data ==> Where the folder containing the raw data for this dataset is
@@ -123,11 +117,8 @@ def main(**kwargs):
         'MM': False if data_origin in sm_datasets else True,
         # Data singularities, long traces with significant filamentation, sudden drop-offs
         'Figures': 'Figures',
-        # 'Figures': filepath + '/Figures',
         'pu': kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv' if data_origin in wang_datasets else kwargs['processed_data'](data_origin) + 'physical_units.csv',
         'tc': kwargs['without_outliers'](data_origin) + 'trace_centered_without_outliers.csv' if data_origin in wang_datasets else kwargs['processed_data'](data_origin) + 'trace_centered.csv'
-        # 'pu': processed_data + 'z_score_under_3/physical_units_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'physical_units.csv',
-        # 'tc': processed_data + 'z_score_under_3/trace_centered_without_outliers.csv' if data_origin in wang_datasets else processed_data + 'trace_centered.csv'
     }
 
     run_it(args, **kwargs)

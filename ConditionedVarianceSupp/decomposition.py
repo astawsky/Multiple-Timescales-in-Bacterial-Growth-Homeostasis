@@ -13,7 +13,7 @@ import seaborn as sns
 """ Create all information dataframe where the lineage lengths are kept constant but the cells in the trace itself are randomly sampled from the population without replacement """
 
 
-def shuffle_info_sm(info):
+def shuffle_info_sm(info: pd.DataFrame):
     # Give it a name, contains S, NL
     new_info = pd.DataFrame(columns=info.columns)
     
@@ -53,7 +53,7 @@ def shuffle_info_sm(info):
 """ vd conditioning on experiments and lineage """
 
 
-def mm_lineage_experiment(chosen_datasets, ax, loc='upper left', **kwargs):
+def mm_lineage_experiment(chosen_datasets: list, ax, loc: str = 'upper left', **kwargs):
     total_df = pd.DataFrame()  # pool all the experiments
     for data_origin in chosen_datasets:
         pu = kwargs['without_outliers'](data_origin) + 'physical_units_without_outliers.csv'
@@ -188,7 +188,7 @@ def mm_lineage_experiment(chosen_datasets, ax, loc='upper left', **kwargs):
 """ vd conditioning on experiment, trap and lineage """
 
 
-def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='upper right', **kwargs):
+def vd_with_trap_lineage_and_experiments(sm_ds: list, variables: list, lin_type: str, ax, loc: str = 'upper right', **kwargs):
     total_df = pd.DataFrame()  # The dataframe with all the experiments in it
 
     # Check what type of pair lineages we want to look at
@@ -323,7 +323,7 @@ def vd_with_trap_lineage_and_experiments(sm_ds, variables, lin_type, ax, loc='up
 """ variance decomposition for MM data conditioning on traps """
 
 
-def mm_traps(chosen_datasets, ax, loc='upper left', **kwargs):
+def mm_traps(chosen_datasets: list, ax, loc: str = 'upper left', **kwargs):
     
     # The dataframe with all the experiments in it
     total_df = pd.DataFrame()

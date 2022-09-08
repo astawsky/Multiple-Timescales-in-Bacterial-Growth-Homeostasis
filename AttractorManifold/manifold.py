@@ -31,7 +31,7 @@ def plot_perfect_line(ax):
     ax.plot3D(gr_domain, gt_domain, y, color='black', alpha=1, zorder=200)  # , zorder=10000
     
     
-def script(variables, ax, points_are='pu', **kwargs):  # can be ta
+def script(variables: list, ax, points_are: str = 'pu', **kwargs):  # can be ta
     ax.set_xlim([0, 3])
     ax.set_ylim([2.5, 0])
     # ax.set_zlim([1, 0])

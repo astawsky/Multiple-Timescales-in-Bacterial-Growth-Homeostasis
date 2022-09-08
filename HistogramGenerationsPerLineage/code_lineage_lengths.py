@@ -8,7 +8,7 @@ import seaborn as sns
 import os
 
 
-def run_it(args, **kwargs):
+def run_it(args: dict, **kwargs):
     physical_units = pd.read_csv(args['pu'])
     
     lengths = []
