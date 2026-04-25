@@ -32,8 +32,16 @@ def plot_perfect_line(ax):
     
     
 def script(variables: list, ax, points_are: str = 'pu', **kwargs):  # can be ta
-    ax.set_xlim([0, 3])
-    ax.set_ylim([2.5, 0])
+    ax.set_xlim([.5, 2.5] if points_are == 'pu' else [0, 3])
+    ax.set_ylim([1.25, 0] if points_are == 'pu' else [2.5, 0])
+
+    # gentime = [1.25, 0], f = [0.8, 0.3], gr = [0.4, 2.5]
+    # ax.set_xlim([0, 3])
+    # ax.set_ylim([2.5, 0])
+    ax.set_xlim([0.4, 2.5])
+    ax.set_ylim([0, 1.25])
+    ax.set_zlim([0.3, 0.8])
+
     # ax.set_zlim([1, 0])
     
     plot_manifold(ax)  # Line of r=1

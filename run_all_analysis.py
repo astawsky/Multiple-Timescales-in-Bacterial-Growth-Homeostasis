@@ -27,11 +27,7 @@ noise_args = {
     'amount_of_noise': [None],  # Other examples include [.1, .2]
     'check': False,
     'ds_names': dataset_names
-# [
-#         '20090131_E_coli_MG1655_(CGSC_6300)_Wang2010', '20090525_E_coli_MG1655_(CGSC_6300)_Wang2010',
-#         '20090512_E_coli_MG1655_(CGSC_6300)_Wang2010', '20090930_E_coli_MG1655_lexA3_Wang2010',
-#         '20090923_E_coli_MG1655_lexA3_Wang2010', '20090922_E_coli_MG1655_lexA3_Wang2010'
-#     ]
+    # , 'plot_it': True
 }
 
 for tof, aof in zip(noise_args["types_of_noise"], noise_args["amount_of_noise"]):
@@ -70,17 +66,17 @@ for tof, aof in zip(noise_args["types_of_noise"], noise_args["amount_of_noise"])
     
     variance_decomposed(**noise_args)  # Requires datasets 'Pooled_SM', 'lambda_lb', 'Maryam_LongTraces'
     
-    variance_decomposed_supp(**noise_args)
+    # variance_decomposed_supp(**noise_args)
     
-    pyramids(**noise_args)
+    # pyramids(**noise_args)
     
-    histogram_of_generations_per_lineage(**noise_args)  # Not necessary since it is not published
+    # histogram_of_generations_per_lineage(**noise_args)  # Not necessary since it is not published
     
-    intergenerational_corrs(**noise_args)
+    # intergenerational_corrs(**noise_args)
     
-    microenv_averages(**noise_args)
+    # microenv_averages(**noise_args)
     
-    pair_lineage_corrs(**noise_args)
+    # pair_lineage_corrs(**noise_args)
     
     dfa_maintext(**noise_args)
     

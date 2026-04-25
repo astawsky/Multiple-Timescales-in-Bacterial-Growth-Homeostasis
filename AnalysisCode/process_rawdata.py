@@ -33,9 +33,8 @@ def clean_up(lineage, window_size_of_interest=200):
     """ Gets rid of the remaining discrepancies """
 
     def recursive_rise_exclusion(lin, totals, rises):
-        diff = np.log(lin['length'].values[:-1]) - np.log(
-            lin['length'].values[
-            1:])  # What is the difference between the natural logs of two consecutive length measurements across one unit of time?
+        # What is the difference between the natural logs of two consecutive length measurements across one unit of time?
+        diff = np.log(lin['length'].values[:-1]) - np.log(lin['length'].values[1:])
 
         new_rises = np.where(diff <= -.5)[0]  # Here is where we check if it went up dramatically
 
@@ -46,8 +45,7 @@ def clean_up(lineage, window_size_of_interest=200):
                 woi = [0, len(lin)]
             elif rise <= window_size_of_interest:  # The raw lineage is big enough but rise is too close to the start of the lineage
                 woi = [0, rise + (window_size_of_interest - rise)]
-            elif len(
-                    lin) - rise <= window_size_of_interest:  # The raw lineage is big enough but rise is too close to the end of the lineage
+            elif len(lin) - rise <= window_size_of_interest:  # The raw lineage is big enough but rise is too close to the end of the lineage
                 woi = [len(lin) - window_size_of_interest, len(lin)]
             else:  # No complications with window size
                 woi = [rise - window_size_of_interest, rise + window_size_of_interest]
@@ -59,14 +57,6 @@ def clean_up(lineage, window_size_of_interest=200):
                 new_new.append(rise)
 
         new_rises = np.array(new_new)
-
-        # if len(new_new) > 0:
-        #     plt.plot(lin['length'].values)
-        #     plt.scatter(new_rises, lin['length'].values[new_rises], color='brown')
-        #     # plt.xlim([2500, 3200])
-        #     plt.tight_layout()
-        #     plt.show()
-        #     plt.close()
 
         rises = np.append(rises, [int(l + np.sum([l >= old for old in totals])) for l in
                                   new_rises]).flatten()  # Re-align these point to the raw_data
@@ -87,8 +77,7 @@ def clean_up(lineage, window_size_of_interest=200):
 
     """ Get rid of the non-positive lengths first """
     total_nans = np.array([])  # Where we will keep all the indices that will be taken out of the corrected lineage
-    non_positives = np.array(
-        lineage[lineage['length'] <= 0].index)  # Where the length is non-positive, which is impossible
+    non_positives = np.array(lineage[lineage['length'] <= 0].index)  # Where the length is non-positive, which is impossible
 
     if len(non_positives) > 0:  # Notify the user and take the non-positives out
         # print('NOTE: This lineage has a length lower than or equal to 0.')
@@ -100,9 +89,8 @@ def clean_up(lineage, window_size_of_interest=200):
     lineage = lineage.reset_index(drop=True)  # for good-practice
 
     """ Get rid of the single-point singularities first """
-    diff = np.log(lineage['length'].values[:-1]) - np.log(
-        lineage['length'].values[
-        1:])  # What is the difference between the natural logs of two consecutive length measurements across one unit of time?
+    # What is the difference between the natural logs of two consecutive length measurements across one unit of time?
+    diff = np.log(lineage['length'].values[:-1]) - np.log(lineage['length'].values[1:])
 
     # Take out all the singularities
     straight_up = np.where(diff <= -.4)[0]  # These are the points whose next point in time shoot up abnormally
@@ -121,8 +109,8 @@ def clean_up(lineage, window_size_of_interest=200):
 
     singularities = np.array([int(l + np.sum([l >= old for old in total_nans])) for l in singularities])
 
-    total_nans = np.append(total_nans,
-                           singularities).flatten()  # Add the singularities to the total indices we will ignore for analysis
+    # Add the singularities to the total indices we will ignore for analysis
+    total_nans = np.append(total_nans, singularities).flatten()
 
     """ Get rid of the remaining singularities recursively """
     new_lineage, new_total_nans, failures = recursive_rise_exclusion(lineage, total_nans, rises=np.array([]))
@@ -326,15 +314,13 @@ def deal_with_indices(lineage, lineage_id, indices_and_mistakes, check):
     lineage, total_nans, rises, singularities, non_positives = clean_up(lineage)  # Detect the mistakes within the cycle
 
     start_indices, end_indices = get_division_indices(
-        lineage['length'].values)  # Figure out the indices for the division events
+        lineage['length'].values
+    )  # Figure out the indices for the division events
 
     # print(f'lineage_id:{lineage_id}\nindices and mistakes: {indices_and_mistakes}\nstart_indices: {start_indices}\nend_indices: {end_indices}')
 
     if (isinstance(start_indices, type(None))) and (isinstance(end_indices, type(None))):
         return [None, None, None]
-
-    # if (len(start_indices) <= 1) and (len(end_indices) <= 1):
-    #     return [None, None, None]
 
     # add the cycle variables to the overall dataframe
     cycle_variables_lineage, with_outliers, start_indices, end_indices, outsider_start_indices, outsider_end_indices = \
@@ -378,11 +364,6 @@ def deal_with_indices(lineage, lineage_id, indices_and_mistakes, check):
                 'type': label,
                 'lineage_ID': lineage_id
             }, index=[len(indices_and_mistakes)])])
-            # indices_and_mistakes = indices_and_mistakes.append({
-            #     'value': v,
-            #     'type': label,
-            #     'lineage_ID': lineage_id
-            # }, ignore_index=True)
 
     if check:
         if np.array([l != 0 for l in [len(total_nans), len(non_positives), len(singularities), len(rises)]]).any():
@@ -497,7 +478,7 @@ class MM:
                 if filename in correct_timestamp:
                     lineage['time'] = lineage['time'] * 2
 
-                time_step = max(np.unique(np.diff(lineage['time'])), key=list(np.diff(lineage['time'])).count)
+                time_step = max(np.unique(np.diff(lineage.loc[1:, 'time'])), key=list(np.diff(lineage.loc[1:, 'time'])).count)
 
                 # print('step size', time_step)
             elif self.args['data_origin'] in wang_datasets:
@@ -920,53 +901,6 @@ class SM:
 
         self.save_dataframes()
 
-    # def save_dataframes(self, ton, aon):
-    #     # rawdata will be in processed folder if noisified
-    #     if (ton is None) and (aon is None):  # Source data
-    #
-    #         # Save the raw data
-    #         self.raw_data.to_csv(
-    #             self.args['source_raw_data'] + r'/raw_data_all_in_one.csv', index=False
-    #         )
-    #     else:  # Noisified data
-    #         # # Save the noisified raw data
-    #         # noise_raw_data = os.path.dirname(self.args['raw_data']) + r'/' + f'type_of_noise_{ton}_amount_of_noise_{aon}'
-    #
-    #         # Save the raw data
-    #         self.raw_data.to_csv(
-    #             self.args['processed_data'] + r'/raw_data_all_in_one.csv', index=False
-    #         )
-    #
-    #     self.cycle_variables.to_csv(self.args['without_outliers'] + '/physical_units_without_outliers.csv',
-    #                                 index=False)  # Save the physiological variables
-    #
-    #     trace_centered = center_the_lineages(self.cycle_variables, phenotypic_variables)
-    #     trace_centered.to_csv(self.args['without_outliers'] + '/trace_centered_without_outliers.csv',
-    #                           index=False)  # Save the trace centered dataframe
-    #
-    #     time_averages = get_time_averages_df(self.cycle_variables, phenotypic_variables)
-    #     time_averages.to_csv(self.args['without_outliers'] + '/time_averages_without_outliers.csv',
-    #                          index=False)  # Save the time averaged dataframe
-    #
-    #     # Now do the ones with filamentation and outliers #
-    #     self.with_outliers_cycle_variables.to_csv(self.args['processed_data'] + '/physical_units.csv',
-    #                                               index=False)  # Save the physiological variables
-    #
-    #     trace_centered = center_the_lineages(self.with_outliers_cycle_variables, phenotypic_variables).reset_index(
-    #         drop=True)
-    #     trace_centered.to_csv(self.args['processed_data'] + '/trace_centered.csv',
-    #                           index=False)  # Save the trace centered dataframe
-    #
-    #     time_averages = get_time_averages_df(
-    #         self.with_outliers_cycle_variables.sort_values(['lineage_ID', 'generation']).reset_index(drop=True),
-    #         phenotypic_variables)
-    #     time_averages.to_csv(self.args['processed_data'] + '/time_averages.csv',
-    #                          index=False)  # Save the time averaged dataframe
-    #
-    #     # Save the raw indices that are supposed to be highlighted
-    #     self.raw_indices.reset_index(drop=True).sort_values(['lineage_ID']).to_csv(
-    #         self.args['processed_data'] + '/raw_indices_processing.csv', index=False)
-
     def input_raw_data(self):
         # Where we will put the raw data
         raw_data = pd.DataFrame(columns=['time', 'length', 'dataset', 'trap_ID', 'trace', 'lineage_ID'])
@@ -1104,7 +1038,7 @@ class SM:
             # Do the physiological variable processing
             cycle_variables_lineage, with_outliers, raw_indices = deal_with_indices(
                 lineage, lineage_id, raw_indices, self.args['check']
-                                                                                    )
+            )
 
             # Add the SM categorical variables
             cycle_variables_lineage['trap_ID'] = lineage['trap_ID'].unique()[0]
@@ -1120,8 +1054,8 @@ class SM:
             with_outliers_cycle_variables = pd.concat([with_outliers_cycle_variables, with_outliers], ignore_index=True)  # with_outliers_cycle_variables.append(with_outliers, ignore_index=True)
 
             if self.args['check']:
-                check_the_division(self.args, lineages=[lineage_id], raw_lineages=lineage,
-                                   raw_indices=raw_indices, pu=cycle_variables)
+                check_the_division(data_origin_name=self.args['data_origin'], lineages=[lineage_id], raw_lineages=lineage,
+                                   raw_indices=raw_indices, pu=cycle_variables, **self.args)
 
         if self.args['check']:
             print('processed data:\n', cycle_variables)
@@ -1149,11 +1083,6 @@ class SM:
                     'percentage': cycle_variables[variable].count() / (
                                 len(cycle_variables[variable]) - (1 * len(cycle_variables['lineage_ID'].unique())))
                 }, index=[len(table_of_outliers)])])
-                # table_of_outliers = table_of_outliers.append({
-                #     'variable': variable,
-                #     'percentage': cycle_variables[variable].count() / (
-                #                 len(cycle_variables[variable]) - (1 * len(cycle_variables['lineage_ID'].unique())))
-                # }, ignore_index=True)
 
                 if self.args['check']:
                     print(variable, cycle_variables[variable].count() / len(cycle_variables[variable]))
@@ -1180,7 +1109,7 @@ class SM:
 
             # Save the raw data
             self.raw_data.to_csv(
-                self.args['processed_data'] + r'/raw_data_all_in_one.csv', index=False
+                noise_raw_data, index=False
             )
 
         self.cycle_variables.to_csv(self.args['without_outliers'] + '/physical_units_without_outliers.csv',
@@ -1220,9 +1149,8 @@ def run_script(argums):
     else:  # Get MM data
         MM(argums)
 
-    # check_the_division(arguments)  # Optional to see the fits over the raw data.
-
     if argums['check']:
+        # check_the_division(data_origin_name=argums['data_origin'], **argums)  # Optional to see the fits over the raw data.
         print('*' * 200)
 
 
@@ -1250,9 +1178,6 @@ def main(tof=None, aof=None, check=False, ds_names=dataset_names, **kwargs):
             'processed_data': kwargs['processed_data'](data_origin),
             'without_outliers': kwargs['without_outliers'](data_origin)
         }
-
-        # create_folder(arguments['processed_data'])
-        # create_folder(arguments['without_outliers'])
 
         # Making the raw, processed and without_outliers arguments for noise or no noise
         if (arguments['type_of_noise'] is None) & (arguments['amount_of_noise'] is None):  # Not using any noise

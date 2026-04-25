@@ -439,8 +439,9 @@ def plot_loglog_lines(loglog_plot_recreation, ax):
     # ax.title(variable)
     ax.set_ylabel(r'$F(k)$')
     ax.set_xlabel('k (window size)')
-    ax.set_yscale('log')
-    ax.set_xscale('log')
+    # ax.set_yscale('log')
+    # ax.set_xscale('log')
+    
     # ax.legend(title='', loc='upper left')
 
 

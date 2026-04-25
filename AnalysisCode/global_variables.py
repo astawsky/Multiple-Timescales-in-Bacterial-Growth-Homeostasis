@@ -453,11 +453,11 @@ def check_the_division(data_origin_name: str, lineages: list = [], raw_lineages:
         print(kwargs)
         # raw_lineages = pd.read_csv(os.path.dirname(os.path.dirname(kwargs['processed_data'](data_origin_name))) + '/raw_data_all_in_one.csv')
         raw_lineages = pd.read_csv(
-            kwargs['raw_data'](data_origin_name) + 'raw_data_all_in_one.csv')
+            kwargs['source_raw_data'] + 'raw_data_all_in_one.csv')
     if len(raw_indices) == 0:
-        raw_indices = pd.read_csv(kwargs['processed_data'](data_origin_name) + 'raw_indices_processing.csv')
+        raw_indices = pd.read_csv(kwargs['processed_data'] + 'raw_indices_processing.csv')
     if len(pu) == 0:
-        pu = pd.read_csv(kwargs['without_outliers'](data_origin_name) + 'physical_units_without_outliers.csv')
+        pu = pd.read_csv(kwargs['without_outliers'] + 'physical_units_without_outliers.csv')
     if len(lineages) == 0:
         lineages = raw_lineages.lineage_ID.unique()
     

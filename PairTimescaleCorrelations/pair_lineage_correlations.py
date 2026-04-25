@@ -61,8 +61,11 @@ def run_it(args, **kwargs):
                     
                     print(f'number of points in the scatter plot {row_var}^A {col_var}^B: {len(col_array)}')  # For the caption in the paper
                     
-                    ax.scatter(col_array, row_array, color=cmap[0], marker='o', alpha=.3)  # plot the points
-                    ax.plot(np.unique(col_array), [intercept + slope * vel for vel in np.unique(col_array)], c='k', ls='--')  # Plot the best fit line
+                    ax.scatter(col_array, row_array, marker='o', alpha=.3, color=cmap[0], cmap='viridis')  # TODO: , color=cmap[0]
+                    # Add a color bar
+                    plt.colorbar(label='Color scale')  # Plot the best fit line
+                    # plot the points
+                    ax.plot(np.unique(col_array), [intercept + slope * vel for vel in np.unique(col_array)], c='k', ls='--')
                     ax.annotate(r'$\rho = $' + pcorr + '\n' + r'$\beta = {:.2}$'.format(np.round(slope, 2)), xy=(.5, .8), xycoords=ax.transAxes, fontsize=7, ha='center', va='bottom', color='red',
                                 bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.7))  # Show the slope as well as the Pearson correlation coefficient
                 
