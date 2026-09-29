@@ -21,6 +21,15 @@ from collections import namedtuple
 from itertools import combinations
 from pathlib import Path
 
+# If the system's C++ compiler cannot find <iostream> (common on macOS when
+# Xcode Command Line Tools headers are missing), pytensor's C backend will crash.
+# Force the NumPy backend by setting cxx= unless the user has already configured
+# a working C++ compiler via PYTENSOR_FLAGS. To enable C compilation for speed,
+# run: PYTENSOR_FLAGS=cxx=/path/to/clang++ python analysis/bayesian_model_comparison.py
+_existing_pt_flags = os.environ.get('PYTENSOR_FLAGS', '')
+if 'cxx' not in _existing_pt_flags:
+    os.environ['PYTENSOR_FLAGS'] = ('cxx=,' + _existing_pt_flags).rstrip(',')
+
 import arviz as az
 import numpy as np
 import pandas as pd
@@ -28,8 +37,22 @@ import pymc as pm
 
 try:
     import pytensor.tensor as pt
-except ImportError:
-    import theano.tensor as pt  # type: ignore  # PyMC v4 fallback
+    from pytensor.tensor.rewriting.blockwise import local_blockwise_alloc as _lba
+    # Pytensor 2.19 bug: local_blockwise_alloc AssertionError for MvStudentT+LKJ
+    # graphs with batched observations. The rewriter uses warn_inplace which re-raises
+    # instead of logging. Returning None signals "no rewrite" and lets compilation continue.
+    _lba_orig_fn = _lba.fn
+    def _lba_safe_fn(fgraph, node):
+        try:
+            return _lba_orig_fn(fgraph, node)
+        except AssertionError:
+            return None
+    _lba.fn = _lba_safe_fn
+except (ImportError, AttributeError):
+    try:
+        import theano.tensor as pt  # type: ignore  # PyMC v4 fallback
+    except ImportError:
+        pass
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from AnalysisCode.global_variables import retrieve_dataframe_directory
@@ -210,9 +233,14 @@ def build_model(config, X, Y, d_obs_pu, daughter_ta_arr):
     d_obs_pu       : dict var -> (n_obs,) PU values for daughter predictors
     daughter_ta_arr: (n_obs, n_targets) TA values for target variables (for homeostasis)
     """
-    n_obs, n_preds = X.shape
+    n_obs, _ = X.shape
     target_list = sorted(config.targets)
     n_targets = len(target_list)
+
+    # Augment X with a leading ones column so mu = X_aug @ beta_aug is a pure
+    # matrix multiply with no broadcast dims — avoids pytensor local_blockwise_alloc bug.
+    X_aug = np.concatenate([np.ones((n_obs, 1), dtype=float), X], axis=1)
+    n_aug = X_aug.shape[1]
 
     with pm.Model() as model:
         # P4: LKJ Cholesky prior on residual covariance
@@ -221,15 +249,10 @@ def build_model(config, X, Y, d_obs_pu, daughter_ta_arr):
             sd_dist=pm.HalfNormal.dist(1.0, shape=n_targets),
         )
 
-        # Intercept per target
-        intercept = pm.Normal('intercept', 0.0, 1.0, shape=n_targets)
-
-        if n_preds > 0:
-            beta = pm.Normal('beta', 0.0, 1.0, shape=(n_preds, n_targets))
-            mu = intercept + pm.math.dot(X, beta)       # (n_obs, n_targets)
-        else:
-            # Null model: broadcast intercept to (n_obs, n_targets)
-            mu = pt.ones((n_obs, n_targets)) * intercept
+        # beta[0, :] acts as the intercept; beta[1:, :] are regression weights.
+        # Single parameter matrix keeps mu shape unambiguous: (n_obs, n_targets).
+        beta = pm.Normal('beta', 0.0, 1.0, shape=(n_aug, n_targets))
+        mu = pm.math.dot(X_aug, beta)
 
         # P2: homeostasis potential with learned tightness
         sigma_h = pm.HalfNormal('sigma_h', 1.0)
@@ -252,7 +275,7 @@ def compute_metrics(idata, model, Y, target_list):
 
     with model:
         ppc = pm.sample_posterior_predictive(
-            idata, var_names=['obs'], progressbar=False)
+            idata, var_names=['obs'], progressbar=True)
 
     # ppc.posterior_predictive['obs']: (chain, draw, n_obs, n_targets)
     ppc_mean = np.array(ppc.posterior_predictive['obs']).mean(axis=(0, 1))
@@ -284,13 +307,17 @@ def compute_metrics(idata, model, Y, target_list):
 # ── Sweep ─────────────────────────────────────────────────────────────────────
 
 def run_sweep(dataset_names=None, n_models=None, results_dir='analysis/results',
-              include_outliers=False):
+              include_outliers=False, draws=500, tune=500, chains=2,
+              nuts_sampler='numpyro'):
     """
     Fit all 112 models and collect comparison metrics.
 
     dataset_names : list of MM dataset names to pool (default: ['Maryam_LongTraces'])
     n_models      : fit only the first N models (None = all 112)
     results_dir   : directory for CSV and InferenceData output
+    draws/tune    : NUTS draws and tuning steps per chain (default 500/500)
+    chains        : number of MCMC chains (default 2)
+    nuts_sampler  : 'numpyro' (fast JAX-JIT) or 'pymc' (pytensor fallback)
     """
     if dataset_names is None:
         dataset_names = ['Maryam_LongTraces']
@@ -303,6 +330,7 @@ def run_sweep(dataset_names=None, n_models=None, results_dir='analysis/results',
     print(f'  {n_pairs} mother-daughter pairs loaded')
 
     all_configs = list(generate_configs())
+    all_configs = all_configs[1:]
     if n_models is not None:
         all_configs = all_configs[:n_models]
 
@@ -352,8 +380,10 @@ def run_sweep(dataset_names=None, n_models=None, results_dir='analysis/results',
 
         with model:
             idata = pm.sample(
-                draws=1000, tune=1000, chains=4,
-                target_accept=0.9, progressbar=False,
+                draws=draws, tune=tune, chains=chains,
+                nuts_sampler=nuts_sampler,
+                target_accept=0.9,
+                progressbar=True,
                 idata_kwargs={'log_likelihood': True},
             )
 
@@ -408,6 +438,15 @@ def main():
                         help='Output directory for results (default: analysis/results)')
     parser.add_argument('--include-outliers', action='store_true',
                         help='Use data with outliers included (default: outliers removed)')
+    parser.add_argument('--draws', type=int, default=500, metavar='N',
+                        help='NUTS draws per chain (default: 500)')
+    parser.add_argument('--tune', type=int, default=500, metavar='N',
+                        help='NUTS tuning steps per chain (default: 500)')
+    parser.add_argument('--chains', type=int, default=2, metavar='N',
+                        help='Number of MCMC chains (default: 2)')
+    parser.add_argument('--nuts-sampler', default='numpyro',
+                        choices=['numpyro', 'blackjax', 'pymc'],
+                        help='NUTS backend (default: numpyro)')
     args = parser.parse_args()
 
     if args.dry_run:
@@ -425,6 +464,10 @@ def main():
         n_models=args.n_models,
         results_dir=args.results_dir,
         include_outliers=args.include_outliers,
+        draws=args.draws,
+        tune=args.tune,
+        chains=args.chains,
+        nuts_sampler=args.nuts_sampler,
     )
 
 
