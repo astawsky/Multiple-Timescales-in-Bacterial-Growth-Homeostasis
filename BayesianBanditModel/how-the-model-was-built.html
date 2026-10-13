@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How the bacterial growth model was built, fitted and tested</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Work+Sans:wght@500;600;700&display=swap">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+ --paper:#FAFAF6;--ink:#1F2328;--muted:#626B72;--line:#D6D9D4;--soft:#EFF1EC;--acc:#3B4FB8;--model:#B8731F;--data:#0B7A75}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#15181C;--ink:#E7EAEC;--muted:#9BA5AD;--line:#333A41;--soft:#1E2329;--acc:#8A99F0;--model:#E2A54E;--data:#3FB7B0}}
+:root[data-theme="dark"]{--paper:#15181C;--ink:#E7EAEC;--muted:#9BA5AD;--line:#333A41;--soft:#1E2329;--acc:#8A99F0;--model:#E2A54E;--data:#3FB7B0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)} *{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Lora,Georgia,serif;font-size:17px;line-height:1.6}
+main{max-width:680px;margin:0 auto;padding:30px 18px 80px}
+h1,h2,h3,.step b,.k,th{font-family:"Work Sans","Helvetica Neue",Arial,sans-serif}
+h1{font-size:clamp(28px,7vw,38px);line-height:1.1;font-weight:700;letter-spacing:-.015em;margin:0 0 10px}
+h2{font-size:22px;font-weight:700;margin:44px 0 8px;padding-top:14px;border-top:2px solid var(--ink)}
+h3{font-size:16px;font-weight:600;margin:22px 0 4px;color:var(--acc)}
+p{margin:0 0 12px} .lede{font-size:18px;color:var(--muted)}
+.eq{background:var(--soft);border-left:3px solid var(--acc);padding:10px 14px;margin:12px 0;font-style:italic;line-height:1.8;font-size:16.5px;overflow-x:auto}
+.eq .c{font-style:normal;color:var(--muted);font-family:"Work Sans",sans-serif;font-size:13px;margin-left:10px}
+.why{font-size:15.5px;color:var(--muted);border-left:3px solid var(--line);padding:4px 12px;margin:10px 0 14px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:10px 0} th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} th{font-weight:600;color:var(--muted);font-size:13px}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:0} ol.steps li{counter-increment:s;position:relative;padding:8px 0 8px 34px;border-top:1px solid var(--line)} ol.steps li::before{content:counter(s);position:absolute;left:0;top:10px;width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;font:600 12px/22px "Work Sans",sans-serif;text-align:center}
+ul{padding-left:1.2em;margin:0 0 12px} li{margin-bottom:6px}
+.pill{display:inline-block;font:600 12px/1 "Work Sans",sans-serif;padding:4px 8px;border-radius:4px;margin-right:4px;vertical-align:middle} .pill.m{background:var(--model);color:#fff} .pill.d{background:var(--data);color:#fff} .pill.a{background:var(--acc);color:#fff}
+.scroll{overflow-x:auto}
+.note{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:40px}
+svg{display:block;width:100%} .t{font:11px "Work Sans",sans-serif;fill:var(--muted)} .s{font:600 13px "Work Sans",sans-serif;fill:var(--ink)}
+</style></head><body><main>
+
+<h1>How the bacterial growth model was built, fitted and tested</h1>
+<p class="lede">A short, complete account of what was done: the data, the model's equations, the statistics used to compare them, how the parameters were fitted in normalised units, and how the fit was checked on things it had never seen.</p>
+
+<h2>1. The data</h2>
+<p>Single <i>E. coli</i> cells were filmed in microfluidic channels. Each time a cell is born, grows and divides, that is one <b>cycle</b>. The repository contains <b>148,339 cycles</b> from <b>2,237 lineages</b> (a lineage is one cell followed through its descendants, always keeping the same pole) across <b>16 experiments</b> from three labs. In the "sister machine" experiments two lineages share a channel; some pairs are sisters (same mother), some are just neighbours.</p>
+<p>Within one cycle the log of the cell's length grows in a straight line. Fitting that line gives everything else:</p>
+<div class="eq">
+x₀ = length at birth, &nbsp; x<sub>τ</sub> = length at division, &nbsp; τ = time between them<br>
+α = slope of ln(length) vs time <span class="c">growth rate</span><br>
+φ = ln(x<sub>τ</sub>/x₀) = ατ <span class="c">fold growth</span> &nbsp;·&nbsp; e<sup>φ</sup> = x<sub>τ</sub>/x₀ <span class="c">fold ratio</span><br>
+Δ = x<sub>τ</sub> − x₀ <span class="c">added length</span> &nbsp;·&nbsp; f = x₀ / (mother's x<sub>τ</sub>) <span class="c">division ratio</span>
+</div>
+<p class="why">Only three of these are free each generation (say α, Δ and f); the rest follow by arithmetic. A model therefore only has to say how α, Δ and f are chosen.</p>
+
+<h2>2. The statistics being explained</h2>
+<p>Everything the model is asked to reproduce is one of these five scale-free quantities, each computed per experiment. Below, x is a variable (say Δ), x<sub>n</sub> its value in generation n, and ⟨·⟩ an average over all cycles.</p>
+<div class="scroll"><table>
+<tr><th>name</th><th>formula</th><th>what it measures</th></tr>
+<tr><td>coefficient of variation</td><td>CV = σ<sub>x</sub> / ⟨x⟩</td><td>how noisy x is, in units of its mean</td></tr>
+<tr><td>correlation</td><td>r<sub>xy</sub> = cov(x, y) / (σ<sub>x</sub> σ<sub>y</sub>)</td><td>whether two variables of the <i>same cell</i> move together (−1 to 1)</td></tr>
+<tr><td>autocorrelation at lag k</td><td>r<sub>k</sub> = corr(x<sub>n</sub>, x<sub>n+k</sub>)</td><td>memory: does a cell resemble its k-th descendant?</td></tr>
+<tr><td>lineage variance share</td><td>1 − Var(x − x̄<sub>lineage</sub>) / Var(x)</td><td>how much of the spread is between lineages rather than within them</td></tr>
+<tr><td>z-score quantiles</td><td>z = (ln x − mean) / sd, then the 5, 25, 50, 75, 95% points</td><td>the <i>shape</i> of the distribution, not just its width</td></tr>
+</table></div>
+<p>Correlations and autocorrelations are computed after subtracting each lineage's own mean, so that slow differences between lineages do not masquerade as cell-to-cell structure. Sizes, times and rates are logged first because their noise is multiplicative.</p>
+
+<h2>3. The model</h2>
+<p>The idea is a bandit: each generation the cell "pulls three arms", committing to a growth rate, an amount to add, and a division ratio, before it knows how the cycle will turn out. It pulls them by <b>Thompson sampling</b>, meaning it draws each value at random from its current belief (a probability distribution) about what works in this environment. That belief is inherited from the mother and drifts slowly. Written out:</p>
+
+<h3>Layer 1 · the belief, and how it is inherited</h3>
+<div class="eq">
+s<sub>n</sub> = ρ<sub>slow</sub> s<sub>n−1</sub> + ε<sub>s</sub> <span class="c">slow state, ρ<sub>slow</sub> ≈ 0.9–1, copied to both daughters</span><br>
+a<sub>n</sub> = ρ<sub>fast</sub> a<sub>n−1</sub> + ε<sub>a</sub> <span class="c">fast state on α, ρ<sub>fast</sub> ≈ 0.3–0.6</span><br>
+e = constant offset per channel <span class="c">the microenvironment, shared by both lineages in it</span>
+</div>
+<p class="why">These are AR(1) processes: each generation keeps a fraction ρ of the previous value and adds fresh noise ε. ρ close to 1 means long memory. Sisters start with the same s and a; neighbours start with the same e only.</p>
+
+<h3>Layer 2 · pulling the arms</h3>
+<div class="eq">
+ln α<sub>n</sub> = ln μ<sub>α</sub> + e<sub>α</sub> + s<sub>α,n</sub> + a<sub>n</sub><br>
+Δ<sub>n</sub> = [ Δ̄ e<sup>e<sub>Δ</sub> + s<sub>Δ,n</sub></sup> + k (x₀ − x̄₀) ] · e<sup>σ<sub>Δ</sub> t<sub>ν</sub></sup> <span class="c">t<sub>ν</sub> = Student-t noise, ν ≈ 4</span><br>
+f<sub>n</sub> = ⟨f⟩ + e<sub>f</sub> + (small AR(1) noise)
+</div>
+<p class="why">k is the <b>policy gain</b>: with k = 0 the cell adds a fixed length regardless of birth size (an "adder"); k &lt; 0 leans towards a size target, k &gt; 0 towards a time target. The Student-t gives heavier tails than a Gaussian; ν = ∞ would recover the Gaussian.</p>
+
+<h3>Layer 3 · the arithmetic (no free parameters)</h3>
+<div class="eq">
+x<sub>τ</sub> = x₀ + Δ<sub>n</sub>, &nbsp; φ<sub>n</sub> = ln(x<sub>τ</sub>/x₀), &nbsp; τ<sub>n</sub> = φ<sub>n</sub>/α<sub>n</sub>, &nbsp; x₀ (daughter) = f<sub>n</sub> x<sub>τ</sub><br>
+measured lengths = true lengths × e<sup>N(0, σ<sub>meas</sub>²)</sup>
+</div>
+<p>Two consequences of layer 3 can be checked by hand and both hold in all 16 experiments: ⟨e<sup>φ</sup>⟩ = 1/⟨f⟩ (a cell grows exactly enough to undo the asymmetry of its division) and r₁(x₀) = ⟨f⟩(1 + k) (the lag-1 memory of birth size).</p>
+
+<h2>4. Normalising before fitting, de-normalising after</h2>
+<p>Each experiment sits at a different point in phenotype space (different medium, temperature, strain): cells are 1.6 µm in one and 3.8 µm in another. Fitting the model to raw micrometres would spend all its effort matching those offsets. So:</p>
+<ol class="steps">
+<li><b>Measured, not fitted.</b> The experiment's means μ<sub>α</sub>, Δ̄, ⟨f⟩ and the gain k (a regression slope of Δ on x₀ within lineages) are read directly from the data and plugged in.</li>
+<li><b>Fitted on scale-free statistics only.</b> Every fitting target in section 2 is dimensionless, and the quantiles are taken in z-units (log, then standardised by the data's own mean and standard deviation). This puts all experiments on one footing.</li>
+<li><b>Validated back in physical units.</b> After fitting, the model's output in µm and hours is compared with the data's mean x₀, τ, Δ and α. A model that only matched z-scores could still be the wrong size; this check catches that.</li>
+</ol>
+
+<h2>5. How the parameters were fitted</h2>
+<p>Fifteen parameters per experiment: the variances of e, s and a; ρ<sub>slow</sub>, ρ<sub>fast</sub>; σ<sub>Δ</sub>, σ<sub>f</sub>; the two Student-t ν's; measurement noise; and three minor ones. The likelihood of this model is intractable (layer 3 is a deterministic map), so the fit is <b>simulation-based</b>:</p>
+<div class="eq">
+L(θ) = Σ<sub>i</sub> w<sub>i</sub> ( ŝ<sub>i</sub> − s<sub>i</sub>(θ) )² <span class="c">ŝ<sub>i</sub>: statistic from data, s<sub>i</sub>(θ): same statistic from a simulation with parameters θ</span>
+</div>
+<ul>
+<li>The simulator advances every lineage of the experiment one generation at a time (vectorised with NumPy), using the real number of lineages and generations.</li>
+<li>It is run with a <b>fixed random seed</b> during fitting ("common random numbers"), so L(θ) is a smooth function of θ and not swamped by simulation noise.</li>
+<li>About 90 targets per experiment: 8 CVs (weight 3), 28 pairwise correlations, 16 autocorrelations at lags 1–2, 8 lineage shares, 40 z-quantiles (weight 0.5), plus sister correlations where pairs exist.</li>
+<li>L is minimised with <b>Nelder–Mead</b>, a derivative-free simplex search, 1,800 evaluations per experiment, parameters clipped to sensible ranges (e.g. 0.5 ≤ ρ<sub>slow</sub> ≤ 0.999, ν ≥ 2.2).</li>
+</ul>
+<p class="why">Why not a Bayesian sampler (Stan, PyMC)? They need a likelihood. The honest next step would be a Kalman or particle smoother over the hidden states s and a, which also gives the "posterior the cell holds" directly.</p>
+
+<h2>6. Validation: things the optimiser never saw</h2>
+<p>After fitting, the model is re-run with a <b>new seed</b> and compared on statistics that were deliberately left out of L:</p>
+<ul>
+<li>autocorrelations at lag 3 (only lags 1–2 were fitted),</li>
+<li>nine mother→daughter correlations (e.g. mother's x<sub>τ</sub> vs daughter's φ),</li>
+<li>the regression slope of x<sub>τ</sub> on x₀ (the "adder slope"),</li>
+<li>the CV of each lineage's mean of r = f e<sup>φ</sup>, which should be tiny if growth is balanced,</li>
+<li>sister correlations at the first generation,</li>
+<li>and, after de-normalising, the physical-unit means.</li>
+</ul>
+<div class="scroll"><table>
+<tr><th>check</th><th>points</th><th>result</th></tr>
+<tr><td>all held-out statistics, 16 experiments</td><td class="n">309</td><td>correlation 0.98, RMS error 0.085</td></tr>
+<tr><td>mother→daughter correlations</td><td class="n">144</td><td>correlation 0.99, RMS error 0.09</td></tr>
+<tr><td>lag-3 autocorrelations</td><td class="n">128</td><td>RMS error 0.08</td></tr>
+<tr><td>distribution shape (KS distance in z-units)</td><td class="n">16 × 8</td><td>median 0.03–0.08 per experiment</td></tr>
+<tr><td>physical means x₀, τ, Δ, α</td><td class="n">64</td><td>within 5% in 14 of 16 experiments</td></tr>
+</table></div>
+<p class="why">KS distance is the largest gap between two cumulative distributions; 0 is identical, 0.05 is hard to see by eye. RMS error of 0.085 on correlations means a typical held-out correlation is predicted to within about ±0.09.</p>
+
+<h2>7. What came out, and what did not</h2>
+<ul>
+<li><b>Heavy tails are real.</b> The fitted ν for Δ is 3.5–7.5 in every experiment (a Gaussian would be ν → ∞). The cell's "belief" about how much to add has fat tails.</li>
+<li><b>Two parameters are nearly universal:</b> ρ<sub>fast</sub> ≈ 0.3–0.6 and σ<sub>Δ</sub> ≈ 0.2–0.3, regardless of lab, temperature or strain. The environment-specific part collapses to (⟨f⟩, k).</li>
+<li><b>Size memory is the gain, not an inherited state.</b> Experiments with k ≈ +0.2 have long size memory; those with k ≈ −0.15 do not. No hidden slow size variable is needed.</li>
+<li><b>Three things it gets wrong.</b> Sisters' first-generation timing is more synchronised than the model predicts (data 0.48, model 0.24): a shared division-timing state is missing. In the oldest datasets the mother's final length and daughter's birth length correlate at 0.80 vs the model's 0.96, which points to measurement noise that the model's σ<sub>meas</sub> is too simple to capture. And one experiment with a long tail of filamentous cells is not reproduced at all.</li>
+<li><b>One parameter is poorly identified.</b> ρ<sub>slow</sub> cannot be separated from the lineage variance of α using single long lineages; it needs paired (sister) data.</li>
+</ul>
+
+<h2>8. The whole pipeline in one picture</h2>
+<svg viewBox="0 0 360 150" role="img" aria-label="pipeline: data to statistics, model to statistics, compare, fit, validate">
+<rect x="6" y="18" width="100" height="40" rx="4" fill="var(--data)" opacity=".15"/><text x="56" y="34" class="s" text-anchor="middle">data</text><text x="56" y="49" class="t" text-anchor="middle">148k cycles</text>
+<rect x="6" y="92" width="100" height="40" rx="4" fill="var(--model)" opacity=".18"/><text x="56" y="108" class="s" text-anchor="middle">simulator(θ)</text><text x="56" y="123" class="t" text-anchor="middle">same lineages, same N</text>
+<rect x="136" y="18" width="88" height="40" rx="4" fill="var(--soft)" stroke="var(--line)"/><text x="180" y="34" class="s" text-anchor="middle">statistics ŝ</text><text x="180" y="49" class="t" text-anchor="middle">scale-free, z-units</text>
+<rect x="136" y="92" width="88" height="40" rx="4" fill="var(--soft)" stroke="var(--line)"/><text x="180" y="108" class="s" text-anchor="middle">statistics s(θ)</text><text x="180" y="123" class="t" text-anchor="middle">same definitions</text>
+<rect x="254" y="55" width="100" height="40" rx="4" fill="var(--acc)" opacity=".15"/><text x="304" y="71" class="s" text-anchor="middle">L(θ) = Σ w(ŝ−s)²</text><text x="304" y="86" class="t" text-anchor="middle">Nelder–Mead</text>
+<path d="M106,38 H136" stroke="var(--ink)" stroke-width="1.3"/><path d="M106,112 H136" stroke="var(--ink)" stroke-width="1.3"/>
+<path d="M224,38 C240,38 240,75 254,75" fill="none" stroke="var(--ink)" stroke-width="1.3"/><path d="M224,112 C240,112 240,75 254,75" fill="none" stroke="var(--ink)" stroke-width="1.3"/>
+<path d="M304,95 V140 H56 V132" fill="none" stroke="var(--acc)" stroke-width="1.3" stroke-dasharray="3 3"/><text x="180" y="147" class="t" text-anchor="middle">update θ, repeat; then test on held-out statistics with a new seed</text>
+</svg>
+
+<p class="note">Code: a single Python script (NumPy, pandas, SciPy); no modelling library. Data: the repository's processed files with lineage-specific 3σ outliers removed. All numbers quoted here were computed in the same session as the fits.</p>
+</main></body></html>
