@@ -58,6 +58,34 @@ x₀ = length at birth, &nbsp; x<sub>τ</sub> = length at division, &nbsp; τ = 
 <h2>3. The model</h2>
 <p>The idea is a bandit: each generation the cell "pulls three arms", committing to a growth rate, an amount to add, and a division ratio, before it knows how the cycle will turn out. It pulls them by <b>Thompson sampling</b>, meaning it draws each value at random from its current belief (a probability distribution) about what works in this environment. That belief is inherited from the mother and drifts slowly. Written out:</p>
 
+<h3>Every symbol in the equations below, in one table</h3>
+<p>The letters fall into four groups: things measured in the data, the hidden "belief" states, the noise terms, and the fixed parameters. Read this table first; the equations are just these pieces assembled.</p>
+<div class="scroll"><table>
+<tr><th>symbol</th><th>what it is</th><th>where it comes from</th></tr>
+<tr><td colspan="3" style="font-family:'Work Sans',sans-serif;font-weight:600;color:var(--acc);border-bottom:none;padding-top:10px">Measured variables (from section 1)</td></tr>
+<tr><td>x₀, x<sub>τ</sub></td><td>length at birth and at division, µm</td><td>the data; in the model, layer 3 computes them</td></tr>
+<tr><td>α<sub>n</sub></td><td>growth rate of the cell in generation n, 1/h</td><td>one of the three "arms" the cell chooses</td></tr>
+<tr><td>Δ<sub>n</sub></td><td>length added during generation n, µm</td><td>the second arm</td></tr>
+<tr><td>f<sub>n</sub></td><td>fraction of the mother's length this cell received (≈ 0.5)</td><td>the third arm</td></tr>
+<tr><td>φ<sub>n</sub>, τ<sub>n</sub></td><td>fold growth and cycle duration</td><td>not chosen; follow from α and Δ in layer 3</td></tr>
+<tr><td>n</td><td>the generation index: n is this cell, n−1 its mother, n+1 its daughter</td><td>bookkeeping</td></tr>
+<tr><td colspan="3" style="font-family:'Work Sans',sans-serif;font-weight:600;color:var(--acc);border-bottom:none;padding-top:10px">Hidden "belief" states (not directly measurable; inherited)</td></tr>
+<tr><td>s<sub>n</sub></td><td><b>s</b>low state: the cell's long-term estimate of how fast to grow and how much to add in this environment, as a deviation from the experiment average. There are two copies, s<sub>α,n</sub> for growth rate and s<sub>Δ,n</sub> for added length.</td><td>starts as a random draw at the first generation, then evolves by the AR(1) rule; passed to both daughters</td></tr>
+<tr><td>a<sub>n</sub></td><td>f<b>a</b>st state on growth rate: the part of the mother's growth-rate deviation that the daughter still carries one or two generations later</td><td>same construction as s, but forgets quickly (ρ<sub>fast</sub> ≈ 0.3–0.6)</td></tr>
+<tr><td>e<sub>α</sub>, e<sub>Δ</sub>, e<sub>f</sub></td><td><b>e</b>nvironment offsets of the channel the cell lives in, for growth rate, added length and division ratio</td><td>one random draw per channel, never changes, shared by both lineages in that channel</td></tr>
+<tr><td colspan="3" style="font-family:'Work Sans',sans-serif;font-weight:600;color:var(--acc);border-bottom:none;padding-top:10px">Noise terms (fresh random draws every generation)</td></tr>
+<tr><td>ε<sub>s</sub>, ε<sub>a</sub></td><td>Gaussian kicks that move s and a each generation</td><td>N(0, σ²(1 − ρ²)) so that s and a keep a fixed overall spread</td></tr>
+<tr><td>t<sub>ν</sub></td><td>a draw from a Student-t distribution with ν degrees of freedom: like a Gaussian but with heavier tails, so rare large deviations happen</td><td>scaled by σ<sub>Δ</sub>; ν is fitted (comes out ≈ 4)</td></tr>
+<tr><td>N(0, σ<sub>meas</sub>²)</td><td>Gaussian measurement error on each logged length</td><td>applied once to x₀ and once to x<sub>τ</sub>, independently</td></tr>
+<tr><td colspan="3" style="font-family:'Work Sans',sans-serif;font-weight:600;color:var(--acc);border-bottom:none;padding-top:10px">Parameters (constants for one experiment)</td></tr>
+<tr><td>μ<sub>α</sub>, Δ̄, ⟨f⟩, x̄₀</td><td>the experiment's average growth rate, added length, division ratio and birth length</td><td>measured directly from the data, not fitted</td></tr>
+<tr><td>k</td><td>the policy gain: how much Δ changes per micrometre of extra birth size</td><td>a regression slope, measured from the data</td></tr>
+<tr><td>ρ<sub>slow</sub>, ρ<sub>fast</sub></td><td>memory of s and of a: the fraction kept from one generation to the next, between 0 (no memory) and 1 (never forgets)</td><td>fitted</td></tr>
+<tr><td>σ<sub>Δ</sub>, σ<sub>f</sub>, σ<sub>meas</sub> and the spreads of e, s, a</td><td>the widths of the noise terms</td><td>fitted</td></tr>
+<tr><td>ν</td><td>Student-t degrees of freedom: small ν means heavy tails, ν → ∞ is Gaussian</td><td>fitted, one for Δ and one for α</td></tr>
+</table></div>
+<p class="why">Rule of thumb for reading the equations: a Greek σ or ρ is a fixed number; a Roman letter with a subscript n is a quantity that changes every generation; ε and t<sub>ν</sub> are the dice.</p>
+
 <h3>Layer 1 · the belief, and how it is inherited</h3>
 <div class="eq">
 s<sub>n</sub> = ρ<sub>slow</sub> s<sub>n−1</sub> + ε<sub>s</sub> <span class="c">slow state, ρ<sub>slow</sub> ≈ 0.9–1, copied to both daughters</span><br>
@@ -119,6 +147,7 @@ L(θ) = Σ<sub>i</sub> w<sub>i</sub> ( ŝ<sub>i</sub> − s<sub>i</sub>(θ) )² 
 <tr><td>lag-3 autocorrelations</td><td class="n">128</td><td>RMS error 0.08</td></tr>
 <tr><td>distribution shape (KS distance in z-units)</td><td class="n">16 × 8</td><td>median 0.03–0.08 per experiment</td></tr>
 <tr><td>physical means x₀, τ, Δ, α</td><td class="n">64</td><td>within 5% in 14 of 16 experiments</td></tr>
+<tr><td>cross-lab transfer: rule frozen from other labs, held-out statistics predicted here (and the reverse)</td><td class="n">81 + 228</td><td>RMS error 0.095 and 0.084, versus 0.081 and 0.080 with each experiment's own fit</td></tr>
 </table></div>
 <p class="why">KS distance is the largest gap between two cumulative distributions; 0 is identical, 0.05 is hard to see by eye. RMS error of 0.085 on correlations means a typical held-out correlation is predicted to within about ±0.09.</p>
 
@@ -128,6 +157,7 @@ L(θ) = Σ<sub>i</sub> w<sub>i</sub> ( ŝ<sub>i</sub> − s<sub>i</sub>(θ) )² 
 <li><b>Two parameters are nearly universal:</b> ρ<sub>fast</sub> ≈ 0.3–0.6 and σ<sub>Δ</sub> ≈ 0.2–0.3, regardless of lab, temperature or strain. The environment-specific part collapses to (⟨f⟩, k).</li>
 <li><b>Size memory is the gain, not an inherited state.</b> Experiments with k ≈ +0.2 have long size memory; those with k ≈ −0.15 do not. No hidden slow size variable is needed.</li>
 <li><b>Three things it gets wrong.</b> Sisters' first-generation timing is more synchronised than the model predicts (data 0.48, model 0.24): a shared division-timing state is missing. In the oldest datasets the mother's final length and daughter's birth length correlate at 0.80 vs the model's 0.96, which points to measurement noise that the model's σ<sub>meas</sub> is too simple to capture. And one experiment with a long tail of filamentous cells is not reproduced at all.</li>
+<li><b>The rule transfers between labs.</b> Freezing the per-generation noise widths, tail exponents and fast memory at the values learned from the other two labs, and refitting only the environment structure, predicts this lab's held-out statistics almost as well as a direct fit; the reverse direction works too. The rule learned from either side is the same to two decimals, with one exception: the width of the growth-rate draw is lab-specific.</li>
 <li><b>One parameter is poorly identified.</b> ρ<sub>slow</sub> cannot be separated from the lineage variance of α using single long lineages; it needs paired (sister) data.</li>
 </ul>
 
