@@ -1,0 +1,16 @@
+step2 SM CMA run 0: loss 0.854 fit 0.100 hold 0.146  rho_fast 0.39 s_d 0.25 nu_d 5.6 s_inh_a 0.057
+step2 SM CMA run 1: loss 0.642 fit 0.090 hold 0.143  rho_fast 0.23 s_d 0.25 nu_d 4.4 s_inh_a 0.108
+step2 SM CMA run 2: loss 1.339 fit 0.122 hold 0.128  rho_fast 0.25 s_d 0.26 nu_d 185.1 s_inh_a 0.017
+step3 timing=False: loss 0.881 fit 0.104 hold 0.124 | tau SL g0 0.70/0.33 g1 0.54/0.22 g2 0.37/0.17 NL g0 0.15/0.36 | s_t 0.000 rho_t 0.30
+step3 timing=True: loss 0.508 fit 0.073 hold 0.134 | tau SL g0 0.70/0.55 g1 0.54/0.21 g2 0.37/0.26 NL g0 0.15/0.40 | s_t 0.078 rho_t 0.26
+step4 separate Tan25 run 0: loss 0.701 hold 0.024 struct s_env_a=0.004 s_env_d=0.013 s_lin_d=0.005 s_lin_f=0.008 s_inh_a=0.033 rho_slow=0.780
+step4 separate Tan25 run 1: loss 1.025 hold 0.032 struct s_env_a=0.016 s_env_d=0.006 s_lin_d=0.057 s_lin_f=0.001 s_inh_a=0.014 rho_slow=0.509
+step4 separate Tan27 run 0: loss 0.616 hold 0.082 struct s_env_a=0.000 s_env_d=0.009 s_lin_d=0.005 s_lin_f=0.008 s_inh_a=0.001 rho_slow=0.539
+step4 separate Tan27 run 1: loss 0.563 hold 0.082 struct s_env_a=0.033 s_env_d=0.010 s_lin_d=0.024 s_lin_f=0.007 s_inh_a=0.000 rho_slow=0.803
+step4 separate Tan37 run 0: loss 0.443 hold 0.028 struct s_env_a=0.004 s_env_d=0.036 s_lin_d=0.000 s_lin_f=0.003 s_inh_a=0.011 rho_slow=0.996
+step4 separate Tan37 run 1: loss 0.493 hold 0.108 struct s_env_a=0.017 s_env_d=0.027 s_lin_d=0.002 s_lin_f=0.009 s_inh_a=0.003 rho_slow=0.947
+step4 pooled run 0: loss 4.203 hold Tan25 0.024 Tan27 0.078 Tan37 0.035 struct s_env_a=0.004 s_env_d=0.007 s_lin_d=0.000 s_lin_f=0.007 s_inh_a=0.013 rho_slow=0.569
+step4 pooled run 1: loss 4.885 hold Tan25 0.032 Tan27 0.078 Tan37 0.036 struct s_env_a=0.006 s_env_d=0.006 s_lin_d=0.002 s_lin_f=0.002 s_inh_a=0.009 rho_slow=0.543
+wang run 0: loss 1.032 fit 0.126 hold 0.117 rho_fast -0.27 s_d 0.28 nu_d 199.4 s_t 0.009
+wang run 1: loss 0.987 fit 0.124 hold 0.115 rho_fast 0.40 s_d 0.13 nu_d 26.4 s_t 0.103
+ALL_DONE

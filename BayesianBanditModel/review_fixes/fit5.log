@@ -1,0 +1,25 @@
+Tanouchi 2015 run 0: loss 4.598 (72s)
+Tanouchi 2015 run 1: loss 5.247 (139s)
+   Tan25       fit 0.207 hold 0.034 ks_med 0.098
+   Tan27       fit 0.092 hold 0.084 ks_med 0.047
+   Tan37       fit 0.168 hold 0.036 ks_med 0.068
+This lab (SM + MM) run 0: loss 4.597 (183s)
+This lab (SM + MM) run 1: loss 4.990 (367s)
+   SM          fit 0.120 hold 0.159 ks_med 0.045
+   MM Maryam   fit 0.105 hold 0.064 ks_med 0.046
+   MM MG1655   fit 0.078 hold 0.061 ks_med 0.046
+   MM λ        fit 0.182 hold 0.104 ks_med 0.069
+Wang 2010 lexA3 run 0: loss 2.043 (105s)
+Wang 2010 lexA3 run 1: loss 3.095 (208s)
+   lexA3 0922  fit 0.093 hold 0.043 ks_med 0.054
+   lexA3 0923  fit 0.112 hold 0.135 ks_med 0.085
+   lexA3 0930  fit 0.101 hold 0.072 ks_med 0.051
+Wang 2010 MG1655 run 0: loss 10.575 (322s)
+Wang 2010 MG1655 run 1: loss 10.804 (648s)
+   Wang 0129   fit 0.145 hold 0.128 ks_med 0.069
+   Wang 0131   fit 0.127 hold 0.130 ks_med 0.069
+   Wang 0210   fit 0.119 hold 0.120 ks_med 0.077
+   Wang 0512   fit 0.272 hold 0.095 ks_med 0.077
+   Wang 0525   fit 0.133 hold 0.115 ks_med 0.061
+   Wang 0702   fit 0.183 hold 0.147 ks_med 0.086
+ALL_DONE
