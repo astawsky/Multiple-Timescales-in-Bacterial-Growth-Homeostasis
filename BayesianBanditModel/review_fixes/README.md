@@ -1,6 +1,22 @@
-# Fixes after the adversarial review (work in progress)
+# Fixes after the adversarial review
 
-**Status: partial. Not all 16 experiments are refitted, and the HTML pages and notebook one level up are NOT yet updated to these results.**
+**Status:**
+- All 16 experiments are refitted with fixes 1, 2 and 4 (`fit5.py` → `fit5_results.json`, log in `fit5.log`).
+- The write-up is updated: `../growth-homeostasis-bandit-v4.html`, new section 13.
+- The notebook is updated: new section 9.
+- Still open: the sister timing mechanism (fix 3), error bars, and the transfer test on the fixed pipeline.
+
+## Round 3: full refit, `fit5.py`
+Four lab×strain groups, each sharing one set of 15 parameters (60 in total instead of 240): this lab (4 experiments), Tanouchi (3), Wang wild type (6), Wang lexA3 (3).
+Settings: measured measurement noise, OLS k, CMA-ES on a 2-seed loss, 2 restarts per group.
+
+Results:
+- **Held-out accuracy.** Mean held-out rmse is 0.096, against 0.080 for revision 3's per-experiment fits; the pooled fit is better in 6 of 16 experiments.
+- **Convergence.** Restarts end at similar losses. Only sigma_Delta ~ 0.25 is identified in every group.
+- **Slow memory.** rho_slow sits on its lower bound in most groups.
+- **Tails.** nu_Delta differs between labs: heavy-tailed in this lab, Gaussian in Wang.
+
+
 
 ## Round 1: `fit3.py` (pipeline fixes)
 Rebuilt from the unfiltered `physical_units.csv`:
