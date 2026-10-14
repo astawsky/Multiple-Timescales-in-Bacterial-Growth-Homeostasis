@@ -1,0 +1,98 @@
+{
+ "Pooled_SM": {
+  "label": "SM",
+  "n_cycles": 2972,
+  "sigma_point": 0.028404511385058444,
+  "sigma_endpoint": 0.01299681800860929
+ },
+ "Maryam_LongTraces": {
+  "label": "MM Maryam",
+  "n_cycles": 1728,
+  "sigma_point": 0.024925262030016937,
+  "sigma_endpoint": 0.010097302527096074
+ },
+ "MG1655_inLB_LongTraces": {
+  "label": "MM MG1655",
+  "n_cycles": 2861,
+  "sigma_point": 0.031035303454079025,
+  "sigma_endpoint": 0.01866142698980054
+ },
+ "lambda_LB": {
+  "label": "MM \u03bb",
+  "n_cycles": 2715,
+  "sigma_point": 0.036204078383240454,
+  "sigma_endpoint": 0.022854226508987763
+ },
+ "MC4100_25C (Tanouchi 2015)": {
+  "label": "Tan25",
+  "n_cycles": 2998,
+  "sigma_point": 0.03379651885599384,
+  "sigma_endpoint": 0.0061084155808242184
+ },
+ "MC4100_27C (Tanouchi 2015)": {
+  "label": "Tan27",
+  "n_cycles": 2967,
+  "sigma_point": 0.041482525260637504,
+  "sigma_endpoint": 0.008578222681846015
+ },
+ "MC4100_37C (Tanouchi 2015)": {
+  "label": "Tan37",
+  "n_cycles": 2994,
+  "sigma_point": 0.03613276570755808,
+  "sigma_endpoint": 0.009676441398122031
+ },
+ "20090129_E_coli_MG1655_(CGSC_6300)_Wang2010": {
+  "label": "Wang 0129",
+  "n_cycles": 2997,
+  "sigma_point": 0.016915195430263413,
+  "sigma_endpoint": 0.005333231143448996
+ },
+ "20090131_E_coli_MG1655_(CGSC_6300)_Wang2010": {
+  "label": "Wang 0131",
+  "n_cycles": 2978,
+  "sigma_point": 0.014155627164389187,
+  "sigma_endpoint": 0.004636705979291109
+ },
+ "20090210_E_coli_MG1655_(CGSC_6300)_Wang2010": {
+  "label": "Wang 0210",
+  "n_cycles": 2989,
+  "sigma_point": 0.014240485810686035,
+  "sigma_endpoint": 0.004690091600201089
+ },
+ "20090512_E_coli_MG1655_(CGSC_6300)_Wang2010": {
+  "label": "Wang 0512",
+  "n_cycles": 2985,
+  "sigma_point": 0.01737786285527341,
+  "sigma_endpoint": 0.005580931832860085
+ },
+ "20090525_E_coli_MG1655_(CGSC_6300)_Wang2010": {
+  "label": "Wang 0525",
+  "n_cycles": 2990,
+  "sigma_point": 0.017669804589234783,
+  "sigma_endpoint": 0.0061120792177255315
+ },
+ "20090702_E_coli_MG1655_(CGSC_6300)_Wang2010": {
+  "label": "Wang 0702",
+  "n_cycles": 2439,
+  "sigma_point": 0.18383783332449433,
+  "sigma_endpoint": 0.057057448876715135
+ },
+ "20090922_E_coli_MG1655_lexA3_Wang2010": {
+  "label": "lexA3 0922",
+  "n_cycles": 2984,
+  "sigma_point": 0.02620626838253922,
+  "sigma_endpoint": 0.008476343384663725
+ },
+ "20090923_E_coli_MG1655_lexA3_Wang2010": {
+  "label": "lexA3 0923",
+  "n_cycles": 2997,
+  "sigma_point": 0.021115117893855333,
+  "sigma_endpoint": 0.007253755200191143
+ },
+ "20090930_E_coli_MG1655_lexA3_Wang2010": {
+  "label": "lexA3 0930",
+  "n_cycles": 2991,
+  "sigma_point": 0.021710994048037665,
+  "sigma_endpoint": 0.007228658593281743
+ }
+}

@@ -1,0 +1,16 @@
+SM          M0 iid Gaussian adder    free  4 loss 3.787 fit 0.192 hold 0.165 ks 0.039
+SM          M1 +heavy tails          free  6 loss 3.704 fit 0.228 hold 0.162 ks 0.071
+SM          M2 +fast α state         free  7 loss 3.915 fit 0.224 hold 0.167 ks 0.062
+SM          M3 +channel/lineage      free 13 loss 0.748 fit 0.086 hold 0.123 ks 0.038
+SM          M4 full                  free 15 loss 0.550 fit 0.083 hold 0.119 ks 0.034
+SM          lineage-split CV: trained on 214 lineages, tested on 216: rmse all 0.103 fit-type 0.083 held-type 0.139
+Tan27       M0 iid Gaussian adder    free  4 loss 0.480 fit 0.083 hold 0.085 ks 0.051
+Tan27       M1 +heavy tails          free  6 loss 0.313 fit 0.074 hold 0.085 ks 0.036
+Tan27       M2 +fast α state         free  7 loss 0.346 fit 0.079 hold 0.083 ks 0.038
+Tan27       M3 +channel/lineage      free 13 loss 3.831 fit 0.230 hold 0.086 ks 0.120
+Tan27       M4 full                  free 15 loss 1.663 fit 0.160 hold 0.116 ks 0.076
+Tan27       lineage-split CV: trained on 27 lineages, tested on 27: rmse all 0.107 fit-type 0.115 held-type 0.076
+Wang 0525   M0 iid Gaussian adder    free  4 loss 1.127 fit 0.132 hold 0.117 ks 0.055
+Wang 0525   M1 +heavy tails          free  6 loss 1.017 fit 0.133 hold 0.119 ks 0.054
+Wang 0525   M2 +fast α state         free  7 loss 0.998 fit 0.133 hold 0.119 ks 0.056
+Wang 0525   M3 +channel/lineage      free 13 loss 1.093 fit 0.130 hold 0.113 ks 0.067
